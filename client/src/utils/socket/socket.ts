@@ -1,7 +1,11 @@
 import { io, Socket } from "socket.io-client";
 import { initializeEvents } from "./events";
-import { rovSensorDataAtom } from "../../../atoms/atoms";
 import { getDefaultStore } from "jotai";
+import { 
+  rovSensorDataAtom, 
+  task2GreenCrabsAtom, 
+  task4ProfileDataAtom,
+} from "../../../atoms/atoms";
 
 const ServerURL = "http://localhost:4000";
 
@@ -16,6 +20,7 @@ socket.on("connect", () => {
   console.log("Socket connected:", socket.id);
 });
 
+
 socket.on("disconnect", () => {
   console.log("Socket disconnected");
 });
@@ -27,4 +32,17 @@ socket.on("connect_error", (error) => {
 const store = getDefaultStore();
 socket.on("rov:sensor-data", (data) => {
   store.set(rovSensorDataAtom, data);
+});
+//..............................................................
+
+// Task 2: AI Detection
+socket.on("ai:green-crab-detected", (count: number) => {
+  store.set(task2GreenCrabsAtom, count);
+});
+
+// Task 4: Depth Tracking
+socket.on("rov:depth-update", (depth: number) => {
+  const currentProfile = store.get(task4ProfileDataAtom);
+  const newProfile = [...currentProfile, { time: Date.now(), depth }].slice(-20);
+  store.set(task4ProfileDataAtom, newProfile);
 });
