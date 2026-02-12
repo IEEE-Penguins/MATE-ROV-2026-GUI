@@ -87,3 +87,20 @@ export const rovSensorDataAtom = atomWithStorage<ROVSensorData | null>(
   "rov-sensor-data",
   null
 );
+
+// --- Task Specific Atoms ---
+// Task 1
+export const task1SnapshotsAtom = atom<{ url: string; timestamp: string }[]>([]);
+
+// Task 2
+export const task2GreenCrabsAtom = atom(0);
+export const task2KeelDepthAtom = atom(0);
+export const task2ThreatLevelAtom = atom<'GREEN' | 'YELLOW' | 'RED'>('GREEN');
+export const task2TrackingAtom = atom(false);
+
+// Task 4
+export const task4ProfileDataAtom = atom<{ time: number; depth: number }[]>([]);
+export const task4MaxDepthAtom = atom(0);
+export const task4AscentRateAtom = atom(0);
+export const task4TargetDepthAtom = atom(3.0);
+export const task4StabilityAtom = atom(98.2);
