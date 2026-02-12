@@ -1,14 +1,14 @@
 import { Outlet } from "react-router-dom";
-import LinkNavigator from "./link-navigator";
+import Navbar from "./Navbar";
 
 export default function Layout() {
   return (
-    <div>
-      <nav className="z-50 -mt-15 flex justify-center gap-5 fixed w-full">
-        <LinkNavigator link="/control-panel" name="CONTROL PANEL" />
-        <LinkNavigator link="/configurations" name="CONFIGURATIONS" />
-      </nav>
-      <main>
+    <div className="min-h-screen  text-white">
+      {/* The New Top Navbar */}
+      <Navbar />
+      
+      {/* Main Content Area */}
+      <main className="w-full h-full">
         <Outlet />
       </main>
     </div>
