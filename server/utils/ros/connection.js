@@ -3,12 +3,18 @@ const ROSLIB = require("roslib");
 const DEFAULT_ROS_BRIDGE_URL = "ws://localhost:9090";
 const COMMAND_TOPIC_NAME = "/rov/command";
 const SENSORS_TOPIC_NAME = "/rov/sensors";
+const AI_TOPIC_NAME = "/crab_count";
+const AI_DETECTION_TOPIC_NAME = "/detected_image";
 const COMMAND_MESSAGE_TYPE = "std_msgs/String";
 const SENSORS_MESSAGE_TYPE = "std_msgs/String";
+const AI_MESSAGE_TYPE = "std_msgs/Int32";
+const AI_DETECTION_MESSAGE_TYPE = "sensor_msgs/Image";
 
 let ros = null;
 let commandPublisher = null;
 let sensorsSubscriber = null;
+let aiSubscriber = null;
+let aiDetectionSubscriber = null;
 let isRosBridgeReady = false;
 let currentRosBridgeUrl = null;
 let io = null;
@@ -54,6 +60,48 @@ const handleSensorData = (message) => {
     }
 };
 
+
+
+/**
+ * Handles AI detection image received from ROS
+ * Converts sensor_msgs/Image to a base64 data URL and emits it
+ * @param {object} message - The image message from ROS (sensor_msgs/Image)
+ */
+const handleAIDetectionImage = (message) => {
+    try {
+        const { data, width, height, encoding } = message;
+
+        // data is a base64-encoded string from rosbridge for uint8 arrays
+        const base64Image = typeof data === "string" ? data : Buffer.from(data).toString("base64");
+        console.log("handling the image");
+        if (io) {
+            io.emit("ai:detection-image", {
+                image: base64Image,
+                width,
+                height,
+                encoding,
+            });
+        }
+    } catch (error) {
+        log(`Error processing AI detection image: ${error.message}`);
+    }
+};
+
+/**
+ * Handles AI data received from ROS
+ * @param {object} message - The AI data message from ROS
+ */
+const handleAIData = (message) => {
+    try {
+        const numberOfGreenCrabs = JSON.parse(message.data);
+        if (io) {
+            io.emit("ai:green-crab-detected", numberOfGreenCrabs);
+        }
+    } catch (error) {
+        log(`Error parsing AI data: ${error.message}`);
+    }
+};
+
 /**
  * Publishes command data to the ROS rov/command topic
  * @param {object} commandData - Command data containing esc, servo, lights
@@ -81,6 +129,8 @@ const resetConnectionState = () => {
     ros = null;
     commandPublisher = null;
     sensorsSubscriber = null;
+    aiSubscriber = null;
+    aiDetectionSubscriber = null;
     currentRosBridgeUrl = null;
 };
 
@@ -96,6 +146,12 @@ const disconnectFromRosBridge = () => {
     try {
         if (sensorsSubscriber) {
             sensorsSubscriber.unsubscribe();
+        }
+        if (aiSubscriber) {
+            aiSubscriber.unsubscribe();
+        }
+        if (aiDetectionSubscriber) {
+            aiDetectionSubscriber.unsubscribe();
         }
         if (ros) {
             ros.close();
@@ -133,8 +189,26 @@ const setupRosEventHandlers = (url) => {
             messageType: SENSORS_MESSAGE_TYPE,
         });
 
+        // Setup AI data subscriber
+        aiSubscriber = new ROSLIB.Topic({
+            ros: ros,
+            name: AI_TOPIC_NAME,
+            messageType: AI_MESSAGE_TYPE,
+        });
+
+        // Setup AI detection image subscriber
+        aiDetectionSubscriber = new ROSLIB.Topic({
+            ros: ros,
+            name: AI_DETECTION_TOPIC_NAME,
+            messageType: AI_DETECTION_MESSAGE_TYPE,
+        });
+
         sensorsSubscriber.subscribe(handleSensorData);
+        aiSubscriber.subscribe(handleAIData);
+        aiDetectionSubscriber.subscribe(handleAIDetectionImage);
         log(`Subscribed to ${SENSORS_TOPIC_NAME} topic`);
+        log(`Subscribed to ${AI_TOPIC_NAME} topic`);
+        log(`Subscribed to ${AI_DETECTION_TOPIC_NAME} topic`);
         log(`Publishing to ${COMMAND_TOPIC_NAME} topic`);
     });
 

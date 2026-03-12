@@ -20,7 +20,7 @@ export default function CameraFeed() {
                 <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
                     <img
                         id="cam1-feed"
-                        src="http://localhost:8080/stream?topic=/cam_front/image_raw"
+                        src="http://localhost:8080/stream?topic=/cam_rear/image_raw"
                         alt="Camera 1"
                         className="w-full h-full object-cover"
                         crossOrigin="anonymous"
