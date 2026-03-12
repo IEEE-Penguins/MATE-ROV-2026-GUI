@@ -20,7 +20,7 @@ export default function CameraFeed() {
                 <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
                     <img
                         id="cam1-feed"
-                        src="http://localhost:8080/stream?topic=/cam_rear/image_raw"
+                        src="http://192.168.1.100:8080/stream?topic=/cam_front/image_raw"
                         alt="Camera 1"
                         className="w-full h-full object-cover"
                         crossOrigin="anonymous"
@@ -35,7 +35,7 @@ export default function CameraFeed() {
                     className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
                     style={{
                         backgroundImage:
-                            "url('http://localhost:8080/stream?topic=/cam_front/image_raw')",
+                            "url('http://192.168.1.100:8080/stream?topic=/cam_rear/image_raw')",
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                     }}
@@ -49,7 +49,8 @@ export default function CameraFeed() {
                 <div
                     className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
                     style={{
-                        backgroundImage: "url('/underwater3.webp')",
+                        backgroundImage:
+                            "url('http://192.168.1.100:8080/stream?topic=/cam_left/image_raw')",
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                     }}
@@ -63,7 +64,8 @@ export default function CameraFeed() {
                 <div
                     className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
                     style={{
-                        backgroundImage: "url('/underwater4.webp')",
+                        backgroundImage:
+                            "url('http://192.168.1.100:8080/stream?topic=/cam_right/image_raw')",
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                     }}
