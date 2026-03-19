@@ -5,6 +5,10 @@ const platforms = require("../data/iceberg.json");
 
 const EARTH_RADIUS_NM = 3440.065;
 const icebergResultPath = path.join(__dirname, "../data/icebergResult.json");
+const rovConfigPath = path.join(__dirname, "../data/rovConfiguration.json");
+const floatMissionPacketsPath = path.join(__dirname, "../data/floatMissionPackets.jsonl");
+
+const DEFAULT_COMPANY_ID = "PN01";
 
 const SENSITIVITY_VALUES = {
   High: 1.0,
@@ -18,7 +22,7 @@ const YAW_SENSITIVITY_VALUES = {
   Low: 0.4,
 };
 
-let rovConfiguration = {
+const defaultRovConfiguration = {
   thrusters: [
     { location: "top", enabled: true, reversed: false },
     { location: "frontLeft", enabled: true, reversed: false },
@@ -40,6 +44,144 @@ let rovConfiguration = {
     joystick: "High",
     yaw: "High",
   },
+};
+
+const persistRovConfiguration = (payload) => {
+  fs.writeFileSync(rovConfigPath, `${JSON.stringify(payload, null, 2)}\n`, "utf-8");
+};
+
+const getPersistedRovConfiguration = () => {
+  if (!fs.existsSync(rovConfigPath)) return null;
+  const raw = fs.readFileSync(rovConfigPath, "utf-8");
+  if (!raw.trim()) return null;
+  return JSON.parse(raw);
+};
+
+const getInitialRovConfiguration = () => {
+  try {
+    const savedConfig = getPersistedRovConfiguration();
+    if (!savedConfig) {
+      persistRovConfiguration(defaultRovConfiguration);
+      return defaultRovConfiguration;
+    }
+
+    return { ...defaultRovConfiguration, ...savedConfig };
+  } catch (error) {
+    console.error("Failed to load persisted ROV configuration:", error);
+    return defaultRovConfiguration;
+  }
+};
+
+let rovConfiguration = getInitialRovConfiguration();
+
+const ensureFileExists = (filePath) => {
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, "", "utf-8");
+  }
+};
+
+const loadPersistedFloatPackets = () => {
+  try {
+    ensureFileExists(floatMissionPacketsPath);
+    const raw = fs.readFileSync(floatMissionPacketsPath, "utf-8");
+    if (!raw.trim()) return [];
+
+    const packets = [];
+    const lines = raw.split(/\r?\n/);
+    lines.forEach((line) => {
+      if (!line.trim()) return;
+      try {
+        packets.push(JSON.parse(line));
+      } catch (error) {
+        console.error("Skipping malformed persisted float packet line:", line);
+      }
+    });
+    return packets;
+  } catch (error) {
+    console.error("Failed to load persisted float mission packets:", error);
+    return [];
+  }
+};
+
+let floatMissionPackets = loadPersistedFloatPackets();
+
+const normalizeTimestamp = (value) => {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return new Date().toLocaleTimeString("en-US", { hour12: false });
+};
+
+const normalizeCompanyId = (value) => {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return DEFAULT_COMPANY_ID;
+};
+
+const normalizeFloatPacket = (payload = {}) => {
+  const depthMeters = Number(payload.depthMeters);
+  if (!Number.isFinite(depthMeters)) {
+    return {
+      valid: false,
+      message: "Invalid packet: depthMeters must be numeric.",
+    };
+  }
+
+  const pressureKpa = Number(payload.pressureKpa);
+  const normalizedPressure = Number.isFinite(pressureKpa)
+    ? Number(pressureKpa.toFixed(2))
+    : Number((Math.max(0, depthMeters) * 9.8).toFixed(2));
+
+  return {
+    valid: true,
+    packet: {
+      companyId: normalizeCompanyId(payload.companyId),
+      timestamp: normalizeTimestamp(payload.timestamp),
+      pressureKpa: normalizedPressure,
+      depthMeters: Number(depthMeters.toFixed(3)),
+      receivedAt: new Date().toISOString(),
+    },
+  };
+};
+
+const appendPersistedFloatPacket = (packet) => {
+  ensureFileExists(floatMissionPacketsPath);
+  fs.appendFileSync(floatMissionPacketsPath, `${JSON.stringify(packet)}\n`, "utf-8");
+};
+
+const ingestFloatPacket = (io, payload, source = "unknown") => {
+  const normalized = normalizeFloatPacket(payload);
+  if (!normalized.valid) {
+    return {
+      success: false,
+      message: normalized.message,
+    };
+  }
+
+  const packet = {
+    ...normalized.packet,
+    source,
+  };
+
+  try {
+    appendPersistedFloatPacket(packet);
+    floatMissionPackets.push(packet);
+
+    io.emit("float:data-packet", packet);
+
+    return {
+      success: true,
+      packet,
+    };
+  } catch (error) {
+    console.error("Failed to persist float packet:", error);
+    return {
+      success: false,
+      message: "Failed to persist float packet.",
+    };
+  }
+};
+
+const getFloatPacketHistory = (limit) => {
+  if (!Number.isFinite(limit) || limit <= 0) return [...floatMissionPackets];
+  return floatMissionPackets.slice(-Math.trunc(limit));
 };
 
 /**
@@ -285,6 +427,28 @@ const registerEventHandlers = (io, socket) => {
     api.publishCommand(command);
   });
 
+  socket.on("float:get-history", ({ limit } = {}) => {
+    const normalizedLimit = Number(limit);
+    const packets = getFloatPacketHistory(normalizedLimit);
+    socket.emit("float:history", {
+      total: floatMissionPackets.length,
+      packets,
+    });
+  });
+
+  socket.on("float:data-packet:ingest", (packetPayload) => {
+    const result = ingestFloatPacket(io, packetPayload, "socket");
+    if (!result.success) {
+      socket.emit("float:error", { message: result.message });
+      return;
+    }
+
+    socket.emit("float:ingest:ack", {
+      success: true,
+      packet: result.packet,
+    });
+  });
+
   // Get current configuration
   socket.on("config:get", () => {
     socket.emit("config:data", rovConfiguration);
@@ -293,6 +457,18 @@ const registerEventHandlers = (io, socket) => {
   // Update configuration
   socket.on("config:update", (newConfig) => {
     rovConfiguration = { ...rovConfiguration, ...newConfig };
+
+    try {
+      persistRovConfiguration(rovConfiguration);
+    } catch (error) {
+      socket.emit("config:updated", {
+        success: false,
+        message: "Configuration update failed to persist.",
+        newConfig: rovConfiguration,
+      });
+      return;
+    }
+
     socket.emit("config:updated", {
       success: true,
       newConfig: rovConfiguration,
@@ -395,3 +571,5 @@ const registerEventHandlers = (io, socket) => {
 };
 
 module.exports = registerEventHandlers;
+module.exports.ingestFloatPacket = ingestFloatPacket;
+module.exports.getFloatPacketHistory = getFloatPacketHistory;
