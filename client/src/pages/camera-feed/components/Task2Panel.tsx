@@ -2,8 +2,6 @@ import {useAtom} from "jotai";
 import {
     task2GreenCrabsAtom,
     task2AIDetectionImageAtom,
-    task2KeelDepthAtom,
-    task2ThreatLevelAtom,
     task2TrackingAtom,
 } from "../../../../atoms/atoms";
 import {RiBarChartBoxLine} from "react-icons/ri";
@@ -11,58 +9,7 @@ import {RiBarChartBoxLine} from "react-icons/ri";
 export default function Task2Panel() {
     const [greenCrabs] = useAtom(task2GreenCrabsAtom);
     const [aiDetectionImage] = useAtom(task2AIDetectionImageAtom);
-    const [keelDepth, setKeelDepth] = useAtom(task2KeelDepthAtom);
-    const [threatLevel, setThreatLevel] = useAtom(
-        task2ThreatLevelAtom,
-    );
     const [tracking, setTracking] = useAtom(task2TrackingAtom);
-
-    const handleKeelChange = (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        const depth = parseFloat(e.target.value) || 0;
-        setKeelDepth(depth);
-
-        if (depth >= 12.5) {
-            setThreatLevel("RED");
-        } else if (depth >= 8) {
-            setThreatLevel("YELLOW");
-        } else {
-            setThreatLevel("GREEN");
-        }
-    };
-
-    const getAlertStyles = () => {
-        switch (threatLevel) {
-            case "RED":
-                return {
-                    container:
-                        "border-red-600/50 bg-red-950/10 shadow-[0_0_15px_rgba(220,38,38,0.4)]",
-                    title: "text-red-400",
-                    threatText: "text-red-500",
-                    message: "text-red-300/80",
-                };
-            case "YELLOW":
-                return {
-                    container:
-                        "border-yellow-600/50 bg-yellow-950/10 shadow-[0_0_15px_rgba(234,179,8,0.3)]",
-                    title: "text-yellow-400",
-                    threatText: "text-yellow-500",
-                    message: "text-yellow-300/80",
-                };
-            case "GREEN":
-            default:
-                return {
-                    container:
-                        "border-green-600/40 bg-green-950/5 shadow-[0_0_12px_rgba(34,197,94,0.2)]",
-                    title: "text-green-400",
-                    threatText: "text-green-500",
-                    message: "text-green-300/70",
-                };
-        }
-    };
-
-    const styles = getAlertStyles();
 
     return (
         <div className="absolute right-20 top-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-80">
@@ -71,8 +18,8 @@ export default function Task2Panel() {
                     <RiBarChartBoxLine className="text-cyan-400 text-lg" />
                 </div>
                 <h2 className="text-base font-bold text-white tracking-wide uppercase">
-                    Iceberg:{" "}
-                    <span className="font-medium">AI Analysis</span>
+                    Task 2.1:{" "}
+                    <span className="font-medium">Green Crabs AI Analysis</span>
                 </h2>
             </div>
 
@@ -100,7 +47,7 @@ export default function Task2Panel() {
                     <p className="text-[10px] text-gray-500 font-bold tracking-[0.2em] uppercase">
                         Specimens Detected
                     </p>
-                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-linear-to-t from-cyan-500/5 to-transparent pointer-events-none" />
                 </div>
 
                 {/* AI Detection Image */}
@@ -120,52 +67,11 @@ export default function Task2Panel() {
                                 No detection image
                             </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-t from-cyan-500/5 to-transparent pointer-events-none" />
                     </div>
                 </div>
             </div>
 
-            <div className="mb-4">
-                <h3 className="text-xs font-black text-cyan-500 uppercase tracking-[0.15em] mb-1">
-                    Threat Calculator
-                </h3>
-
-                <div className="space-y-2">
-                    <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                        Keel Depth Input (M)
-                    </label>
-                    <input
-                        type="number"
-                        step="1"
-                        value={keelDepth}
-                        onChange={handleKeelChange}
-                        className="w-full bg-[#040c0f] border border-cyan-900/50 p-4 rounded-xl text-lg text-white focus:border-cyan-400 focus:outline-none transition-colors"
-                    />
-                </div>
-            </div>
-
-            <div
-                className={`mt-2 p-6 rounded-2xl border-2 transition-all duration-500 ${styles.container}`}
-            >
-                <div className="text-center">
-                    <h3
-                        className={`text-[10px] font-bold tracking-[0.3em] uppercase mb-2 ${styles.title}`}
-                    >
-                        System Alert
-                    </h3>
-                    <h1
-                        className={`text-2xl font-black mb-3 tracking-tight ${styles.threatText}`}
-                    >
-                        THREAT: {threatLevel}
-                    </h1>
-                    <p
-                        className={`text-[11px] leading-relaxed mx-auto max-w-[200px] ${styles.message}`}
-                    >
-                        Keel depth below safety threshold for current
-                        bathymetry
-                    </p>
-                </div>
-            </div>
         </div>
     );
 }

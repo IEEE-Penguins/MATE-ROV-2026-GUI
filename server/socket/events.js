@@ -1,4 +1,10 @@
 const rosBridgeConnection = require("../utils/ros/connection");
+const fs = require("fs");
+const path = require("path");
+const platforms = require("../data/iceberg.json");
+
+const EARTH_RADIUS_NM = 3440.065;
+const icebergResultPath = path.join(__dirname, "../data/icebergResult.json");
 
 const SENSITIVITY_VALUES = {
   High: 1.0,
@@ -152,6 +158,74 @@ const mapLights = (controllerReadings) => {
   return [0, 0];
 };
 
+const toRadians = (degrees) => degrees * (Math.PI / 180);
+
+/**
+ * Calculates distance in nautical miles using Haversine formula.
+ * Earth radius in NM is 3440.065.
+ */
+const calculateDistanceNm = (lat1, lon1, lat2, lon2) => {
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const lat1Rad = toRadians(lat1);
+  const lat2Rad = toRadians(lat2);
+
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_NM * c;
+};
+
+/**
+ * Applies the exact surface and subsea threat rules for one platform.
+ */
+const calculateThreats = (iceberg, platform) => {
+  const distance = calculateDistanceNm(iceberg.lat, iceberg.lon, platform.lat, platform.lon);
+
+  const calculateSurfaceThreat = () => {
+    const depthRatio = iceberg.keelDepth / platform.depth;
+    if (depthRatio >= 1.1) return "GREEN";
+    if (distance < 5) return "RED";
+    if (distance >= 5 && distance <= 10) return "YELLOW";
+    return "GREEN";
+  };
+
+  const calculateSubseaThreat = () => {
+    if (distance > 25) return "GREEN";
+    const depthRatio = iceberg.keelDepth / platform.depth;
+    if (depthRatio >= 1.1) return "GREEN";
+    if (depthRatio >= 0.9 && depthRatio < 1.1) return "RED";
+    if (depthRatio >= 0.7 && depthRatio < 0.9) return "YELLOW";
+    return "GREEN";
+  };
+
+  return {
+    platformName: platform.name,
+    distance,
+    surfaceThreatLevel: calculateSurfaceThreat(),
+    subseaAssetThreatLevel: calculateSubseaThreat(),
+  };
+};
+
+const persistIcebergResult = (payload) => {
+  fs.writeFileSync(icebergResultPath, `${JSON.stringify(payload, null, 2)}\n`, "utf-8");
+};
+
+const getPersistedIcebergResult = () => {
+  if (!fs.existsSync(icebergResultPath)) return null;
+  const raw = fs.readFileSync(icebergResultPath, "utf-8");
+  if (!raw.trim()) return null;
+  return JSON.parse(raw);
+};
+
+const isValidIcebergPayload = (iceberg) => {
+  return iceberg
+    && Number.isFinite(Number(iceberg.lat))
+    && Number.isFinite(Number(iceberg.lon))
+    && Number.isFinite(Number(iceberg.heading))
+    && Number.isFinite(Number(iceberg.keelDepth));
+};
+
 /**
  * Maps controller input to ROV command
  * @param {object} controllerReadings - Controller input data
@@ -223,6 +297,62 @@ const registerEventHandlers = (io, socket) => {
       success: true,
       newConfig: rovConfiguration,
     });
+  });
+
+  socket.on("iceberg:get-last-result", () => {
+    try {
+      const savedResult = getPersistedIcebergResult();
+      if (savedResult) {
+        socket.emit("iceberg:result", savedResult);
+      }
+    } catch (error) {
+      socket.emit("iceberg:error", {
+        message: "Failed to load saved iceberg result.",
+      });
+    }
+  });
+
+  socket.on("iceberg:calculate", (icebergInput) => {
+    try {
+      if (!isValidIcebergPayload(icebergInput)) {
+        socket.emit("iceberg:error", {
+          message: "Invalid iceberg input. Latitude, longitude, heading, and keel depth must be numeric.",
+        });
+        return;
+      }
+
+      const iceberg = {
+        lat: Number(icebergInput.lat),
+        lon: Number(icebergInput.lon),
+        heading: Number(icebergInput.heading),
+        keelDepth: Number(icebergInput.keelDepth),
+      };
+
+      const results = platforms.map((platform) => {
+        const threat = calculateThreats(iceberg, platform);
+        return {
+          name: threat.platformName,
+          distance: Number(threat.distance.toFixed(2)),
+          surfaceThreatLevel: threat.surfaceThreatLevel,
+          subseaAssetThreatLevel: threat.subseaAssetThreatLevel,
+          depth: platform.depth,
+        };
+      });
+
+      const payload = {
+        iceberg,
+        results,
+        timestamp: new Date().toISOString(),
+      };
+
+      persistIcebergResult(payload);
+      io.emit("iceberg:result", payload);
+    } catch (error) {
+      console.error("Iceberg calculation error:", error);
+      socket.emit("iceberg:error", {
+        message: "Failed to calculate iceberg threats.",
+      });
+    }
   });
 
   // Test individual thruster
