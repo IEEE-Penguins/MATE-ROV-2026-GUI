@@ -1,5 +1,6 @@
 import {useAtom} from "jotai";
 import {rovSensorDataAtom} from "../../../../atoms/atoms";
+
 interface SensorItemProps {
     label: string;
     values: number[];
@@ -10,6 +11,7 @@ export default function LeftSensorsOverlay() {
     const [sensorsData] = useAtom(rovSensorDataAtom);
 
     const depth = sensorsData?.depth ?? 0.0;
+    
     const acc = Array.isArray(sensorsData?.mpu?.acc)
         ? sensorsData.mpu.acc
         : [0, 0, 0];
@@ -42,19 +44,19 @@ export default function LeftSensorsOverlay() {
                     </div>
                 </div>
 
-                <div className="relative w-4 h-[380px] bg-white/5 rounded-full border border-white/10 overflow-hidden backdrop-blur-sm">
+                <div className="relative w-4 h-[380px] bg-white/5 rounded-full border border-white/60 overflow-hidden backdrop-blur-sm">
                     <div
-                        className="absolute top-0 left-0 w-full bg-slate-900 shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all duration-1000 ease-in-out rounded-full"
+                        className="absolute top-0 left-0 w-full bg-[#00013F] shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all duration-1000 ease-in-out rounded-full"
                         style={{height: `${fillPercentage}%`}}
                     />
                 </div>
 
                 <div className="flex flex-col justify-center h-[400px] ml-2">
                     <div className="flex flex-col items-start leading-none">
-                        <span className="text-5xl font-black text-slate-900 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+                        <span className="text-5xl font-black text-[#00013F] drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
                             {depth.toFixed(1)}
                         </span>
-                        <span className="text-xl font-bold text-slate-600 mt-2 tracking-widest uppercase">
+                        <span className="text-xl font-bold text-white mt-2 tracking-widest uppercase">
                             Meters
                         </span>
                     </div>
@@ -62,7 +64,7 @@ export default function LeftSensorsOverlay() {
             </div>
 
             {/* mpu */}
-            <div className="space-y-1.5 bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/5 w-52 shadow-2xl">
+            <div className="space-y-1.5 bg-black/70 backdrop-blur-md p-3 rounded-2xl border border-white/5 w-52 shadow-2xl">
                 <SensorItem
                     label="MPU (Acceleration)"
                     values={acc}

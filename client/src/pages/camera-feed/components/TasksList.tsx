@@ -37,7 +37,7 @@ const TasksList = () => {
     <div className="fixed left-52 bottom-0 z-40 w-full pointer-events-none">
       <div className="relative pointer-events-auto">
         {isExpanded && (
-          <div className="absolute bottom-4 left-0 bg-[#0B1120]/60 backdrop-blur-lg border-t border-cyan-400/20 p-4 mx-6 rounded-t-lg">
+          <div className="absolute bottom-4 left-0  bg-black/80 backdrop-blur-lg border-t border-cyan-400/20 p-4 mx-6 rounded-t-lg">
             <div className="max-w-5xl">
               <div className="flex gap-4 items-start">
                 <div>

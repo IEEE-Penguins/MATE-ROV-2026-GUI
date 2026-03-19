@@ -12,7 +12,7 @@ export default function Task2Panel() {
     const [tracking, setTracking] = useAtom(task2TrackingAtom);
 
     return (
-        <div className="absolute right-20 top-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-80">
+        <div className="absolute right-20 top-20 z-30  bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-80">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-cyan-600/60">
                 <div className="p-1.5 border border-cyan-500 rounded">
                     <RiBarChartBoxLine className="text-cyan-400 text-lg" />
