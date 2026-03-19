@@ -1,6 +1,5 @@
 import {useAtom} from "jotai";
 import {task1SnapshotsAtom} from "../../../../atoms/atoms";
-import {TbGrid4X4} from "react-icons/tb";
 import {IoScanOutline} from "react-icons/io5";
 
 export default function Task1Panel() {
@@ -36,6 +35,7 @@ export default function Task1Panel() {
 
         setSnapshots([newSnapshot, ...snapshots]);
     };
+
 
     return (
         <div className="absolute right-20 top-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-80">
@@ -87,7 +87,7 @@ export default function Task1Panel() {
                 </h3>
             </div>
 
-            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 scrollbar-hide">
+            <div className="space-y-3 max-h-88 overflow-y-auto pr-1 scrollbar-hide">
                 {snapshots.map((snap, i) => (
                     <div
                         key={i}

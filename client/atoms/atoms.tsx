@@ -91,10 +91,52 @@ export interface ROVSensorData {
 export const rovSensorDataAtom =
     atomWithStorage<ROVSensorData | null>("rov-sensor-data", null);
 
+export type ThreatLevel = "GREEN" | "YELLOW" | "RED";
+
+export interface IcebergInput {
+    lat: number;
+    lon: number;
+    heading: number;
+    keelDepth: number;
+}
+
+export interface IcebergPlatformResult {
+    name: string;
+    distance: number;
+    surfaceThreatLevel: ThreatLevel;
+    subseaAssetThreatLevel: ThreatLevel;
+    depth: number;
+}
+
+export interface IcebergCalculationResult {
+    iceberg: IcebergInput;
+    results: IcebergPlatformResult[];
+    timestamp: string;
+}
+
+export const icebergInputAtom = atomWithStorage<IcebergInput>(
+    "iceberg-input",
+    {
+        lat: 0,
+        lon: 0,
+        heading: 0,
+        keelDepth: 0,
+    },
+);
+
+export const icebergCalculationAtom =
+    atomWithStorage<IcebergCalculationResult | null>(
+        "iceberg-calculation",
+        null,
+    );
+
+export const icebergLoadingAtom = atom(false);
+export const icebergErrorAtom = atom<string | null>(null);
+
 // --- Task Specific Atoms ---
 // Task 1
 export const task1SnapshotsAtom = atom<
-    {url: string; timestamp: string}[]
+    {url: string; timestamp: string; cam: string}[]
 >([]);
 
 // Task 2

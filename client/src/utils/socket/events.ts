@@ -70,6 +70,25 @@ export const initializeEvents = (socket: Socket) => ({
         socket.emit("controller:data", controllerData);
     },
 
+    /**
+     * Calculates iceberg threats against reference platforms
+     */
+    calculateIcebergThreats: (iceberg: {
+        lat: number;
+        lon: number;
+        heading: number;
+        keelDepth: number;
+    }) => {
+        socket.emit("iceberg:calculate", iceberg);
+    },
+
+    /**
+     * Requests the most recently saved iceberg calculation result
+     */
+    getLastIcebergThreats: () => {
+        socket.emit("iceberg:get-last-result");
+    },
+
     // Legacy method names for backward compatibility
     /** @deprecated Use checkRosBridgeStatus instead */
     isRovConnected: () => {

@@ -1,0 +1,6 @@
+[
+    { "name": "Hibernia", "lat": 43.7504, "lon": -48.7819, "depth": 78 },
+    { "name": "Sea Rose", "lat": 46.7895, "lon": -48.1417, "depth": 107 },
+    { "name": "Terra Nova", "lat": 46.4000, "lon": -48.4000, "depth": 91 },
+    { "name": "Hebron", "lat": 46.5440, "lon": -48.4980, "depth": 93 }
+]

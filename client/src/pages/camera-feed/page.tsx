@@ -3,6 +3,7 @@ import TasksPanel from "./components/TasksList";
 import RightSideButtons from "./components/RightSideButtons";
 import Task1Panel from "./components/Task1Panel";
 import Task2Panel from "./components/Task2Panel";
+import IcebergThreatPanel from "./components/IcebergThreatPanel";
 import Task4Panel from "./components/Task4Panel";
 import LeftSensorsOverlay from "./components/LeftSensorsOverlay";
 import {RiEyeLine, RiEyeOffLine} from "react-icons/ri";
@@ -31,45 +32,42 @@ export default function CameraFeed() {
                 </div>
 
                 {/* CAM 2 */}
-                <div
-                    className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
-                    style={{
-                        backgroundImage:
-                            "url('http://192.168.1.100:8080/stream?topic=/cam_rear/image_raw')",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                    }}
-                >
+                <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
+                    <img
+                        id="cam2-feed"
+                        src="http://192.168.1.100:8080/stream?topic=/cam_rear/image_raw"
+                        alt="Camera 2"
+                        className="w-full h-full object-cover"
+                        crossOrigin="anonymous"
+                    />
                     <span className="absolute top-4 left-4 bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg">
                         CAM 2
                     </span>
                 </div>
 
                 {/* CAM 3 */}
-                <div
-                    className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
-                    style={{
-                        backgroundImage:
-                            "url('http://192.168.1.100:8080/stream?topic=/cam_left/image_raw')",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                    }}
-                >
+                <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
+                    <img
+                        id="cam3-feed"
+                        src="http://192.168.1.100:8080/stream?topic=/cam_left/image_raw"
+                        alt="Camera 3"
+                        className="w-full h-full object-cover"
+                        crossOrigin="anonymous"
+                    />
                     <span className="absolute top-4 right-4 bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg">
                         CAM 3
                     </span>
                 </div>
 
                 {/* CAM 4 */}
-                <div
-                    className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
-                    style={{
-                        backgroundImage:
-                            "url('http://192.168.1.100:8080/stream?topic=/cam_right/image_raw')",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                    }}
-                >
+                <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
+                    <img
+                        id="cam4-feed"
+                        src="http://192.168.1.100:8080/stream?topic=/cam_right/image_raw"
+                        alt="Camera 4"
+                        className="w-full h-full object-cover"
+                        crossOrigin="anonymous"
+                    />
                     <span className="absolute top-4 left-4 bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg">
                         CAM 4
                     </span>
@@ -101,7 +99,9 @@ export default function CameraFeed() {
                     <div className="pointer-events-none absolute inset-0">
                         <div className="pointer-events-auto">
                             {activePanel === 1 && <Task1Panel />}
-                            {activePanel === 2 && <Task2Panel />}
+                            {activePanel === 21 && <Task2Panel />}
+                            {activePanel === 22 &&
+                                <IcebergThreatPanel />}
                             {activePanel === 4 && <Task4Panel />}
                         </div>
                     </div>

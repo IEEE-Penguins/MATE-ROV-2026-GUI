@@ -6,6 +6,9 @@ import {
     task2GreenCrabsAtom,
     task2AIDetectionImageAtom,
     task4ProfileDataAtom,
+    icebergCalculationAtom,
+    icebergErrorAtom,
+    icebergLoadingAtom,
 } from "../../../atoms/atoms";
 
 const ServerURL = "http://localhost:4000";
@@ -63,4 +66,18 @@ socket.on("rov:depth-update", (depth: number) => {
         {time: Date.now(), depth},
     ].slice(-20);
     store.set(task4ProfileDataAtom, newProfile);
+});
+
+socket.on("iceberg:result", (payload) => {
+    store.set(icebergCalculationAtom, payload);
+    store.set(icebergErrorAtom, null);
+    store.set(icebergLoadingAtom, false);
+});
+
+socket.on("iceberg:error", (error: {message?: string}) => {
+    store.set(
+        icebergErrorAtom,
+        error?.message || "Failed to calculate iceberg threats.",
+    );
+    store.set(icebergLoadingAtom, false);
 });
