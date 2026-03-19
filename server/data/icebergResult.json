@@ -1,39 +1,39 @@
 {
   "iceberg": {
     "lat": 60,
-    "lon": 200,
+    "lon": 20,
     "heading": 20,
     "keelDepth": 50
   },
   "results": [
     {
       "name": "Hibernia",
-      "distance": 3727.64,
+      "distance": 2590.62,
       "surfaceThreatLevel": "GREEN",
       "subseaAssetThreatLevel": "GREEN",
       "depth": 78
     },
     {
       "name": "Sea Rose",
-      "distance": 3587.56,
+      "distance": 2440.9,
       "surfaceThreatLevel": "GREEN",
       "subseaAssetThreatLevel": "GREEN",
       "depth": 107
     },
     {
       "name": "Terra Nova",
-      "distance": 3601.56,
+      "distance": 2464.94,
       "surfaceThreatLevel": "GREEN",
       "subseaAssetThreatLevel": "GREEN",
       "depth": 91
     },
     {
       "name": "Hebron",
-      "distance": 3592.09,
+      "distance": 2461.71,
       "surfaceThreatLevel": "GREEN",
       "subseaAssetThreatLevel": "GREEN",
       "depth": 93
     }
   ],
-  "timestamp": "2026-03-19T14:15:52.702Z"
+  "timestamp": "2026-03-19T19:24:11.298Z"
 }

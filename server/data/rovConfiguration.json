@@ -1,0 +1,61 @@
+{
+  "thrusters": [
+    {
+      "location": "top",
+      "enabled": true,
+      "reversed": false
+    },
+    {
+      "location": "frontLeft",
+      "enabled": true,
+      "reversed": false
+    },
+    {
+      "location": "backLeft",
+      "enabled": true,
+      "reversed": false
+    },
+    {
+      "location": "frontRight",
+      "enabled": true,
+      "reversed": false
+    },
+    {
+      "location": "backRight",
+      "enabled": true,
+      "reversed": false
+    }
+  ],
+  "grippers": [
+    {
+      "location": "front",
+      "enabled": true
+    },
+    {
+      "location": "back",
+      "enabled": true
+    }
+  ],
+  "sensors": [
+    {
+      "type": "depth",
+      "enabled": true
+    },
+    {
+      "type": "temperature",
+      "enabled": true
+    },
+    {
+      "type": "acceleration",
+      "enabled": true
+    },
+    {
+      "type": "rotation",
+      "enabled": true
+    }
+  ],
+  "sensitivity": {
+    "joystick": "High",
+    "yaw": "High"
+  }
+}

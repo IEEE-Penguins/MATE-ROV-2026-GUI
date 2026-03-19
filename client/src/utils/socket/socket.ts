@@ -10,6 +10,7 @@ import {
     icebergErrorAtom,
     icebergLoadingAtom,
 } from "../../../atoms/atoms";
+import type {FloatMissionPacket} from "../../../atoms/atoms";
 
 const ServerURL = "http://localhost:4000";
 
@@ -22,6 +23,7 @@ export const events = initializeEvents(socket);
 
 socket.on("connect", () => {
     console.log("Socket connected:", socket.id);
+    socket.emit("float:get-history");
 });
 
 socket.on("disconnect", () => {
@@ -35,6 +37,39 @@ socket.on("connect_error", (error) => {
 const store = getDefaultStore();
 socket.on("rov:sensor-data", (data) => {
     store.set(rovSensorDataAtom, data);
+});
+
+const appendTask4Packet = (packet: FloatMissionPacket) => {
+    const currentProfile = store.get(task4ProfileDataAtom);
+    store.set(task4ProfileDataAtom, [...currentProfile, packet]);
+};
+
+const formatLocalTimestamp = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+        hour12: false,
+    });
+};
+
+socket.on("float:history", (payload: {packets?: Partial<FloatMissionPacket>[]}) => {
+    const packets = Array.isArray(payload?.packets) ? payload.packets : [];
+    const normalizedPackets = packets
+        .map((packet) => {
+            const normalizedDepth = Number(packet.depthMeters);
+            if (!Number.isFinite(normalizedDepth)) return null;
+
+            const normalizedPressure = Number(packet.pressureKpa);
+            return {
+                companyId: packet.companyId?.trim() || "PN01",
+                timestamp: packet.timestamp?.trim() || formatLocalTimestamp(new Date()),
+                pressureKpa: Number.isFinite(normalizedPressure)
+                    ? normalizedPressure
+                    : Number((Math.max(0, normalizedDepth) * 9.8).toFixed(2)),
+                depthMeters: normalizedDepth,
+            };
+        })
+        .filter((packet): packet is FloatMissionPacket => packet !== null);
+
+    store.set(task4ProfileDataAtom, normalizedPackets);
 });
 //..............................................................
 
@@ -59,13 +94,28 @@ socket.on(
 );
 
 // Task 4: Depth Tracking
-socket.on("rov:depth-update", (depth: number) => {
-    const currentProfile = store.get(task4ProfileDataAtom);
-    const newProfile = [
-        ...currentProfile,
-        {time: Date.now(), depth},
-    ].slice(-20);
-    store.set(task4ProfileDataAtom, newProfile);
+socket.on("float:depth-update", (depth: number) => {
+    appendTask4Packet({
+        companyId: "PN01",
+        timestamp: formatLocalTimestamp(new Date()),
+        pressureKpa: Number((Math.max(0, depth) * 9.8).toFixed(2)),
+        depthMeters: Number(depth.toFixed(3)),
+    });
+});
+
+socket.on("float:data-packet", (packet: Partial<FloatMissionPacket>) => {
+    const normalizedDepth = Number(packet.depthMeters);
+    if (!Number.isFinite(normalizedDepth)) return;
+
+    const normalizedPressure = Number(packet.pressureKpa);
+    appendTask4Packet({
+        companyId: packet.companyId?.trim() || "PN01",
+        timestamp: packet.timestamp?.trim() || formatLocalTimestamp(new Date()),
+        pressureKpa: Number.isFinite(normalizedPressure)
+            ? normalizedPressure
+            : Number((Math.max(0, normalizedDepth) * 9.8).toFixed(2)),
+        depthMeters: normalizedDepth,
+    });
 });
 
 socket.on("iceberg:result", (payload) => {

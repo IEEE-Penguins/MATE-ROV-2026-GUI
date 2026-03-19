@@ -149,9 +149,14 @@ export const task2ThreatLevelAtom = atom<"GREEN" | "YELLOW" | "RED">(
 export const task2TrackingAtom = atom(false);
 
 // Task 4
-export const task4ProfileDataAtom = atom<
-    {time: number; depth: number}[]
->([]);
+export interface FloatMissionPacket {
+    companyId: string;
+    timestamp: string;
+    pressureKpa: number;
+    depthMeters: number;
+}
+
+export const task4ProfileDataAtom = atom<FloatMissionPacket[]>([]);
 export const task4MaxDepthAtom = atom(0);
 export const task4AscentRateAtom = atom(0);
 export const task4TargetDepthAtom = atom(3.0);
