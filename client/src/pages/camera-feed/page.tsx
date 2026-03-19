@@ -16,8 +16,7 @@ export default function CameraFeed() {
 
     return (
         <div className="relative w-full h-screen bg-black pt-16 flex flex-col overflow-hidden">
-            <div className="grid grid-cols-2 grid-rows-2 w-full h-full gap-1 bg-black p-1">
-                {/* CAM 1 */}
+            <div className="relative grid grid-cols-2 grid-rows-2 w-full h-full gap-1 bg-black p-1">
                 <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
                     <img
                         id="cam1-feed"
@@ -31,7 +30,6 @@ export default function CameraFeed() {
                     </span>
                 </div>
 
-                {/* CAM 2 */}
                 <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
                     <img
                         id="cam2-feed"
@@ -45,7 +43,6 @@ export default function CameraFeed() {
                     </span>
                 </div>
 
-                {/* CAM 3 */}
                 <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
                     <img
                         id="cam3-feed"
@@ -59,7 +56,6 @@ export default function CameraFeed() {
                     </span>
                 </div>
 
-                {/* CAM 4 */}
                 <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
                     <img
                         id="cam4-feed"
@@ -72,20 +68,19 @@ export default function CameraFeed() {
                         CAM 4
                     </span>
                 </div>
-            </div>
 
-            {/* clean view */}
-            <button
-                onClick={() => setHudVisible(!hudVisible)}
-                className="absolute left-1/2 top-96 z-50 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[#0B1120]/90  border border-white/30 flex items-center justify-center text-white hover:bg-black hover:border-cyan-400 hover:text-cyan-200 transition-all duration-200 shadow-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                title={hudVisible ? "hide" : "visible"}
-            >
-                {hudVisible ? (
-                    <RiEyeOffLine size={22} />
-                ) : (
-                    <RiEyeLine size={22} />
-                )}
-            </button>
+                <button
+                    onClick={() => setHudVisible(!hudVisible)}
+                    className="absolute left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[#0B1120]/90  border border-white/30 flex items-center justify-center text-white hover:bg-black hover:border-cyan-400 hover:text-cyan-200 transition-all duration-200 shadow-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                    title={hudVisible ? "hide" : "visible"}
+                >
+                    {hudVisible ? (
+                        <RiEyeOffLine size={22} />
+                    ) : (
+                        <RiEyeLine size={22} />
+                    )}
+                </button>
+            </div>
 
             {hudVisible && (
                 <>

@@ -38,7 +38,7 @@ export default function Task1Panel() {
 
 
     return (
-        <div className="absolute right-20 top-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-80">
+        <div className="absolute right-20 top-20 z-30  bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-80">
             <div className="grid grid-cols-2 gap-3 mb-6">
                 <button
                     onClick={() => handleCapture("#cam1-feed", "CAM 1")}
