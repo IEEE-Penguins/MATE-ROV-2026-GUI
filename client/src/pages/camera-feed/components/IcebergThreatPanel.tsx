@@ -1,4 +1,4 @@
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {useAtom} from "jotai";
 import {
     icebergInputAtom,
@@ -10,7 +10,9 @@ import type {ThreatLevel} from "../../../../atoms/atoms";
 import {events} from "../../../utils/socket/socket";
 import {RiShipLine} from "react-icons/ri";
 
-const toNumber = (value: string) => parseFloat(value) || 0;
+const isTransientNumericInput = (value: string) => {
+    return value === "" || value === "-" || value === "." || value === "-.";
+};
 
 const getBadgeStyles = (level: ThreatLevel) => {
     switch (level) {
@@ -29,18 +31,57 @@ export default function IcebergThreatPanel() {
     const [icebergCalculation] = useAtom(icebergCalculationAtom);
     const [loading, setLoading] = useAtom(icebergLoadingAtom);
     const [error, setError] = useAtom(icebergErrorAtom);
+    const [draftInput, setDraftInput] = useState({
+        lat: String(icebergInput.lat),
+        lon: String(icebergInput.lon),
+        heading: String(icebergInput.heading),
+        keelDepth: String(icebergInput.keelDepth),
+    });
 
     useEffect(() => {
         events.getLastIcebergThreats();
     }, []);
 
+    useEffect(() => {
+        setDraftInput({
+            lat: String(icebergInput.lat),
+            lon: String(icebergInput.lon),
+            heading: String(icebergInput.heading),
+            keelDepth: String(icebergInput.keelDepth),
+        });
+    }, [icebergInput]);
+
     const handleInputChange =
         (field: "lat" | "lon" | "heading" | "keelDepth") =>
         (e: React.ChangeEvent<HTMLInputElement>) => {
+            const raw = e.target.value;
+
+            setDraftInput((prev) => ({
+                ...prev,
+                [field]: raw,
+            }));
+
+            if (isTransientNumericInput(raw)) return;
+
+            const parsed = Number(raw);
+            if (!Number.isFinite(parsed)) return;
+
             setIcebergInput({
                 ...icebergInput,
-                [field]: toNumber(e.target.value),
+                [field]: parsed,
             });
+        };
+
+    const handleInputBlur =
+        (field: "lat" | "lon" | "heading" | "keelDepth") =>
+        () => {
+            const raw = draftInput[field];
+            if (isTransientNumericInput(raw)) {
+                setDraftInput((prev) => ({
+                    ...prev,
+                    [field]: String(icebergInput[field]),
+                }));
+            }
         };
 
     const submitCalculation = () => {
@@ -75,8 +116,9 @@ export default function IcebergThreatPanel() {
                     <input
                         type="number"
                         step="0.0001"
-                        value={icebergInput.lat}
+                        value={draftInput.lat}
                         onChange={handleInputChange("lat")}
+                        onBlur={handleInputBlur("lat")}
                         className="mt-1 w-full bg-[#040c0f] border border-cyan-900/50 px-3 py-2 rounded-lg text-sm text-white focus:border-cyan-400 focus:outline-none"
                     />
                 </label>
@@ -85,8 +127,9 @@ export default function IcebergThreatPanel() {
                     <input
                         type="number"
                         step="0.0001"
-                        value={icebergInput.lon}
+                        value={draftInput.lon}
                         onChange={handleInputChange("lon")}
+                        onBlur={handleInputBlur("lon")}
                         className="mt-1 w-full bg-[#040c0f] border border-cyan-900/50 px-3 py-2 rounded-lg text-sm text-white focus:border-cyan-400 focus:outline-none"
                     />
                 </label>
@@ -95,8 +138,9 @@ export default function IcebergThreatPanel() {
                     <input
                         type="number"
                         step="1"
-                        value={icebergInput.heading}
+                        value={draftInput.heading}
                         onChange={handleInputChange("heading")}
+                        onBlur={handleInputBlur("heading")}
                         className="mt-1 w-full bg-[#040c0f] border border-cyan-900/50 px-3 py-2 rounded-lg text-sm text-white focus:border-cyan-400 focus:outline-none"
                     />
                 </label>
@@ -105,8 +149,9 @@ export default function IcebergThreatPanel() {
                     <input
                         type="number"
                         step="1"
-                        value={icebergInput.keelDepth}
+                        value={draftInput.keelDepth}
                         onChange={handleInputChange("keelDepth")}
+                        onBlur={handleInputBlur("keelDepth")}
                         className="mt-1 w-full bg-[#040c0f] border border-cyan-900/50 px-3 py-2 rounded-lg text-sm text-white focus:border-cyan-400 focus:outline-none"
                     />
                 </label>
