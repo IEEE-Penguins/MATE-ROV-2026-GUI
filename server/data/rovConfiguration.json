@@ -1,7 +1,12 @@
 {
   "thrusters": [
     {
-      "location": "top",
+      "location": "topLeft",
+      "enabled": true,
+      "reversed": false
+    },
+    {
+      "location": "topRight",
       "enabled": true,
       "reversed": false
     },

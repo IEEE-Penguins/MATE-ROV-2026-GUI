@@ -24,7 +24,8 @@ const YAW_SENSITIVITY_VALUES = {
 
 const defaultRovConfiguration = {
   thrusters: [
-    { location: "top", enabled: true, reversed: false },
+    { location: "topLeft", enabled: true, reversed: false },
+    { location: "topRight", enabled: true, reversed: false },
     { location: "frontLeft", enabled: true, reversed: false },
     { location: "backLeft", enabled: true, reversed: false },
     { location: "frontRight", enabled: true, reversed: false },
@@ -215,7 +216,8 @@ const calculateMovementIntents = (controllerReadings, sensitivity) => ({
  */
 const calculateThrusterPower = (location, intents) => {
   switch (location) {
-    case "top":
+    case "topLeft":
+    case "topRight":
       return intents.heave;
     case "frontLeft":
       return intents.sway + intents.yaw + intents.surge;
