@@ -135,9 +135,21 @@ export const icebergErrorAtom = atom<string | null>(null);
 
 // --- Task Specific Atoms ---
 // Task 1
-export const task1SnapshotsAtom = atom<
+export interface Task1MeasurementFrame {
+    url: string;
+    timestamp: string;
+    cam: string;
+}
+
+export const task1SnapshotsAtom = atomWithStorage<
     {url: string; timestamp: string; cam: string}[]
->([]);
+>("task1-snapshots", []);
+
+export const task1MeasurementFrameAtom =
+    atomWithStorage<Task1MeasurementFrame | null>(
+        "task1-measurement-frame",
+        null,
+    );
 
 // Task 2
 export const task2GreenCrabsAtom = atom(0);
