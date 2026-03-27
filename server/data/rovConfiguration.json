@@ -1,7 +1,12 @@
 {
   "thrusters": [
     {
-      "location": "topLeft",
+      "location": "frontRight",
+      "enabled": true,
+      "reversed": false
+    },
+    {
+      "location": "backRight",
       "enabled": true,
       "reversed": false
     },
@@ -16,17 +21,12 @@
       "reversed": false
     },
     {
+      "location": "topLeft",
+      "enabled": true,
+      "reversed": false
+    },
+    {
       "location": "backLeft",
-      "enabled": true,
-      "reversed": false
-    },
-    {
-      "location": "frontRight",
-      "enabled": true,
-      "reversed": false
-    },
-    {
-      "location": "backRight",
       "enabled": true,
       "reversed": false
     }
