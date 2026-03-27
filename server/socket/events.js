@@ -203,7 +203,7 @@ const getSensitivityScalars = (config) => ({
  */
 const calculateMovementIntents = (controllerReadings, sensitivity) => ({
   surge: (controllerReadings.axes.L[1] || 0) * sensitivity.joystick,
-  sway: 0,
+  sway: (controllerReadings.axes.L[0] || 0) * sensitivity.joystick,
   yaw: (-(controllerReadings.buttons.R2 || 0) + (controllerReadings.buttons.L2 || 0)) * sensitivity.yaw,
   heave: (controllerReadings.axes.R[1] || 0) * -1 * sensitivity.joystick,
 });
@@ -217,16 +217,17 @@ const calculateMovementIntents = (controllerReadings, sensitivity) => ({
 const calculateThrusterPower = (location, intents) => {
   switch (location) {
     case "topLeft":
+      return -intents.heave;
     case "topRight":
       return intents.heave;
     case "frontLeft":
-      return intents.sway + intents.yaw + intents.surge;
+      return -intents.sway + intents.yaw + intents.surge;
     case "frontRight":
-      return -intents.surge + intents.sway - intents.yaw;
+      return intents.surge + intents.sway - intents.yaw;
     case "backLeft":
-      return -intents.surge - intents.sway + intents.yaw;
+      return -intents.surge - intents.sway - intents.yaw;
     case "backRight":
-      return intents.surge + intents.sway + intents.yaw;
+      return -intents.surge + intents.sway + intents.yaw;
     default:
       return 0.0;
   }
