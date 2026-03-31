@@ -61,10 +61,6 @@ export default function CameraFeed() {
         number | null
     >(null);
 
-    const expandedCamera = cameras.find(
-        (camera) => camera.id === expandedCameraId,
-    ) ?? null;
-
     useEffect(() => {
         if (expandedCameraId === null) {
             return;
@@ -86,56 +82,54 @@ export default function CameraFeed() {
     return (
         <div className="relative w-full h-screen bg-black pt-16 flex flex-col overflow-hidden">
             <div className="relative grid grid-cols-2 grid-rows-2 w-full h-full gap-1 bg-black p-1">
-                {cameras.map((camera) => (
-                    <div
-                        key={camera.id}
-                        className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
-                    >
-                        <img
-                            id={camera.feedId}
-                            src={camera.src}
-                            alt={camera.alt}
-                            className="w-full h-full object-cover"
-                            crossOrigin="anonymous"
-                        />
-                        <span
-                            className={`absolute ${camera.labelPositionClass} bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg`}
-                        >
-                            {camera.label}
-                        </span>
-                        <button
-                            onClick={() => setExpandedCameraId(camera.id)}
-                            className="absolute bottom-2 right-2 z-20 rounded-md border border-cyan-500/50 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-200 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                            title="Expand"
-                        >
-                            Expand
-                        </button>
-                    </div>
-                ))}
+                {cameras.map((camera) => {
+                    const isExpanded = expandedCameraId === camera.id;
+                    const shouldHide =
+                        expandedCameraId !== null && !isExpanded;
 
-                {expandedCamera && (
-                    <div className="absolute inset-1 z-20 overflow-hidden border border-cyan-500/40 bg-slate-900 group">
-                        <img
-                            id={`${expandedCamera.feedId}-expanded`}
-                            src={expandedCamera.src}
-                            alt={`${expandedCamera.alt} Expanded`}
-                            className="w-full h-full object-cover"
-                            crossOrigin="anonymous"
-                        />
-                        <span
-                            className={`absolute ${expandedCamera.labelPositionClass} bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg`}
+                    return (
+                        <div
+                            key={camera.id}
+                            className={`${isExpanded
+                                ? "absolute inset-1 z-20"
+                                : "relative"} bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110 ${shouldHide ? "hidden" : ""} ${isExpanded ? "border-cyan-500/40" : ""}`}
                         >
-                            {expandedCamera.label}
-                        </span>
-                        <button
-                            onClick={() => setExpandedCameraId(null)}
-                            className="absolute bottom-2 right-2 z-30 rounded-md border border-cyan-500/60 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-100 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                            title="Collapse"
-                        >
-                            Collapse
-                        </button>
-                    </div>
-                )}
+                            <img
+                                id={camera.feedId}
+                                src={camera.src}
+                                alt={camera.alt}
+                                className="w-full h-full object-cover"
+                                crossOrigin="anonymous"
+                            />
+                            <span
+                                className={`absolute ${camera.labelPositionClass} bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg`}
+                            >
+                                {camera.label}
+                            </span>
+                            {isExpanded
+                                ? (
+                                    <button
+                                        onClick={() =>
+                                            setExpandedCameraId(null)}
+                                        className="absolute bottom-2 right-2 z-30 rounded-md border border-cyan-500/60 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-100 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                        title="Collapse"
+                                    >
+                                        Collapse
+                                    </button>
+                                )
+                                : (
+                                    <button
+                                        onClick={() =>
+                                            setExpandedCameraId(camera.id)}
+                                        className="absolute bottom-2 right-2 z-20 rounded-md border border-cyan-500/50 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-200 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                        title="Expand"
+                                    >
+                                        Expand
+                                    </button>
+                                )}
+                        </div>
+                    );
+                })}
 
                 <button
                     onClick={() => setHudVisible(!hudVisible)}
