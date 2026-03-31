@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import TasksPanel from "./components/TasksList";
 import RightSideButtons from "./components/RightSideButtons";
 import Task1Panel from "./components/Task1Panel";
@@ -8,66 +8,134 @@ import Task4Panel from "./components/Task4Panel";
 import LeftSensorsOverlay from "./components/LeftSensorsOverlay";
 import {RiEyeLine, RiEyeOffLine} from "react-icons/ri";
 
+type CameraConfig = {
+    id: number;
+    feedId: string;
+    src: string;
+    alt: string;
+    label: string;
+    labelPositionClass: string;
+};
+
+const cameras: CameraConfig[] = [
+    {
+        id: 1,
+        feedId: "cam1-feed",
+        src: "underwater.webp",
+        alt: "Camera 1",
+        label: "CAM 1",
+        labelPositionClass: "top-4 right-4",
+    },
+    {
+        id: 2,
+        feedId: "cam2-feed",
+        src: "underwater2.webp",
+        alt: "Camera 2",
+        label: "CAM 2",
+        labelPositionClass: "top-4 left-4",
+    },
+    {
+        id: 3,
+        feedId: "cam3-feed",
+        src: "underwater3.webp",
+        alt: "Camera 3",
+        label: "CAM 3",
+        labelPositionClass: "top-4 right-4",
+    },
+    {
+        id: 4,
+        feedId: "cam4-feed",
+        src: "underwater4.webp",
+        alt: "Camera 4",
+        label: "CAM 4",
+        labelPositionClass: "top-4 left-4",
+    },
+];
+
 export default function CameraFeed() {
     const [activePanel, setActivePanel] = useState<number | null>(
         null,
     );
     const [hudVisible, setHudVisible] = useState(true);
+    const [expandedCameraId, setExpandedCameraId] = useState<
+        number | null
+    >(null);
+
+    const expandedCamera = cameras.find(
+        (camera) => camera.id === expandedCameraId,
+    ) ?? null;
+
+    useEffect(() => {
+        if (expandedCameraId === null) {
+            return;
+        }
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setExpandedCameraId(null);
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [expandedCameraId]);
 
     return (
         <div className="relative w-full h-screen bg-black pt-16 flex flex-col overflow-hidden">
             <div className="relative grid grid-cols-2 grid-rows-2 w-full h-full gap-1 bg-black p-1">
-                <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
-                    <img
-                        id="cam1-feed"
-                        src="http://192.168.1.100:8080/stream?topic=/cam_front/image_raw"
-                        alt="Camera 1"
-                        className="w-full h-full object-cover"
-                        crossOrigin="anonymous"
-                    />
-                    <span className="absolute top-4 right-4 bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg">
-                        CAM 1
-                    </span>
-                </div>
+                {cameras.map((camera) => (
+                    <div
+                        key={camera.id}
+                        className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110"
+                    >
+                        <img
+                            id={camera.feedId}
+                            src={camera.src}
+                            alt={camera.alt}
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                        />
+                        <span
+                            className={`absolute ${camera.labelPositionClass} bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg`}
+                        >
+                            {camera.label}
+                        </span>
+                        <button
+                            onClick={() => setExpandedCameraId(camera.id)}
+                            className="absolute bottom-2 right-2 z-20 rounded-md border border-cyan-500/50 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-200 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                            title="Expand"
+                        >
+                            Expand
+                        </button>
+                    </div>
+                ))}
 
-                <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
-                    <img
-                        id="cam2-feed"
-                        src="http://192.168.1.100:8080/stream?topic=/cam_rear/image_raw"
-                        alt="Camera 2"
-                        className="w-full h-full object-cover"
-                        crossOrigin="anonymous"
-                    />
-                    <span className="absolute top-4 left-4 bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg">
-                        CAM 2
-                    </span>
-                </div>
-
-                <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
-                    <img
-                        id="cam3-feed"
-                        src="http://192.168.1.100:8080/stream?topic=/cam_left/image_raw"
-                        alt="Camera 3"
-                        className="w-full h-full object-cover"
-                        crossOrigin="anonymous"
-                    />
-                    <span className="absolute top-4 right-4 bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg">
-                        CAM 3
-                    </span>
-                </div>
-
-                <div className="relative bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110">
-                    <img
-                        id="cam4-feed"
-                        src="http://192.168.1.100:8080/stream?topic=/cam_right/image_raw"
-                        alt="Camera 4"
-                        className="w-full h-full object-cover"
-                        crossOrigin="anonymous"
-                    />
-                    <span className="absolute top-4 left-4 bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg">
-                        CAM 4
-                    </span>
-                </div>
+                {expandedCamera && (
+                    <div className="absolute inset-1 z-20 overflow-hidden border border-cyan-500/40 bg-slate-900 group">
+                        <img
+                            id={`${expandedCamera.feedId}-expanded`}
+                            src={expandedCamera.src}
+                            alt={`${expandedCamera.alt} Expanded`}
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                        />
+                        <span
+                            className={`absolute ${expandedCamera.labelPositionClass} bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg`}
+                        >
+                            {expandedCamera.label}
+                        </span>
+                        <button
+                            onClick={() => setExpandedCameraId(null)}
+                            className="absolute bottom-2 right-2 z-30 rounded-md border border-cyan-500/60 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-100 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                            title="Collapse"
+                        >
+                            Collapse
+                        </button>
+                    </div>
+                )}
 
                 <button
                     onClick={() => setHudVisible(!hudVisible)}

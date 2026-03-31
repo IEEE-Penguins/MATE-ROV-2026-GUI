@@ -53,6 +53,8 @@ export default function Task1Panel() {
     const [referenceLengthInput, setReferenceLengthInput] =
         useState<string>("");
     const [measurements, setMeasurements] = useState<DrawnMeasurement[]>([]);
+    const [isMeasurementFullscreen, setIsMeasurementFullscreen] =
+        useState(false);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const frameImageRef = useRef<HTMLImageElement | null>(null);
@@ -251,6 +253,30 @@ export default function Task1Panel() {
         measurements,
     ]);
 
+    useEffect(() => {
+        if (!isMeasurementFullscreen) {
+            return;
+        }
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setIsMeasurementFullscreen(false);
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [isMeasurementFullscreen]);
+
+    useEffect(() => {
+        if (!frozenFrameUrl) {
+            setIsMeasurementFullscreen(false);
+        }
+    }, [frozenFrameUrl]);
+
     const captureFrame = (selectedCamera: CameraOption) => {
         const videoElement = document.querySelector(
             selectedCamera.id,
@@ -349,8 +375,7 @@ export default function Task1Panel() {
             return;
         }
 
-        const img = new Image();
-        img.onload = () => {
+        const applyImageToCanvas = (img: HTMLImageElement) => {
             const canvas = canvasRef.current;
             if (!canvas) return;
 
@@ -360,12 +385,25 @@ export default function Task1Panel() {
             renderCanvas();
         };
 
+        if (
+            frameImageRef.current &&
+            frameImageRef.current.src === frozenFrameUrl
+        ) {
+            applyImageToCanvas(frameImageRef.current);
+            return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+            applyImageToCanvas(img);
+        };
+
         img.onerror = () => {
             setStatusMessage("Failed to load captured frame into measurement canvas.");
         };
 
         img.src = frozenFrameUrl;
-    }, [frozenFrameUrl, renderCanvas]);
+    }, [frozenFrameUrl, renderCanvas, isMeasurementFullscreen]);
 
     const getPointFromClick = (
         event: React.MouseEvent<HTMLCanvasElement>,
@@ -490,7 +528,8 @@ export default function Task1Panel() {
 
 
     return (
-        <div className="absolute right-20 top-20 z-30  bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-[27rem] max-h-[82vh] overflow-y-auto scrollbar-hide">
+        <>
+            <div className="absolute right-20 top-20 z-30  bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-[27rem] max-h-[82vh] overflow-y-auto scrollbar-hide">
             <div className="mb-4 pb-4 border-b border-cyan-600/35">
                 <h3 className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase mb-2">
                     Task 1 Measurement Widget
@@ -543,28 +582,49 @@ export default function Task1Panel() {
                 </div>
             )}
 
-            <div className="mb-4 rounded-lg border border-slate-700/70 bg-[#03090d] p-2">
-                {!frozenFrameUrl && (
-                    <div className="h-52 flex items-center justify-center text-[10px] text-gray-500 uppercase tracking-wide">
-                        No frame captured yet.
+                <div className="mb-4 rounded-lg border border-slate-700/70 bg-[#03090d] p-2">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-cyan-500/80 uppercase tracking-wide">
+                            Measurement Frame
+                        </span>
+                        {frozenFrameUrl && (
+                            <button
+                                onClick={() =>
+                                    setIsMeasurementFullscreen(true)}
+                                className="px-2 py-1 rounded border border-cyan-700/70 bg-cyan-950/30 text-[9px] text-cyan-200 font-bold uppercase tracking-wider hover:bg-cyan-900/40 transition-colors"
+                            >
+                                Fullscreen
+                            </button>
+                        )}
                     </div>
-                )}
 
-                <canvas
-                    ref={canvasRef}
-                    onClick={handleCanvasClick}
-                    className={`w-full h-auto rounded cursor-crosshair ${
-                        frozenFrameUrl ? "block" : "hidden"
-                    }`}
-                />
+                    {isMeasurementFullscreen && (
+                        <div className="h-52 flex items-center justify-center text-[10px] text-cyan-500/80 uppercase tracking-wide border border-dashed border-cyan-900/40 rounded">
+                            Frame opened in fullscreen. Press Esc or use exit button.
+                        </div>
+                    )}
 
-                {frameMeta && (
-                    <div className="mt-2 flex justify-between text-[10px] text-cyan-500/80 uppercase tracking-wide">
-                        <span>{frameMeta.cam}</span>
-                        <span>{frameMeta.timestamp}</span>
-                    </div>
-                )}
-            </div>
+                    {!isMeasurementFullscreen && !frozenFrameUrl && (
+                        <div className="h-52 flex items-center justify-center text-[10px] text-gray-500 uppercase tracking-wide">
+                            No frame captured yet.
+                        </div>
+                    )}
+
+                    {!isMeasurementFullscreen && frozenFrameUrl && (
+                        <canvas
+                            ref={canvasRef}
+                            onClick={handleCanvasClick}
+                            className="w-full h-auto rounded cursor-crosshair"
+                        />
+                    )}
+
+                    {!isMeasurementFullscreen && frameMeta && (
+                        <div className="mt-2 flex justify-between text-[10px] text-cyan-500/80 uppercase tracking-wide">
+                            <span>{frameMeta.cam}</span>
+                            <span>{frameMeta.timestamp}</span>
+                        </div>
+                    )}
+                </div>
 
             <div className="mb-4 rounded-lg border border-cyan-900/30 p-3 bg-black/30">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">
@@ -633,7 +693,7 @@ export default function Task1Panel() {
                 )}
             </div>
 
-            <div className="pt-3 border-t border-cyan-900/20">
+                <div className="pt-3 border-t border-cyan-900/20">
                 <div className="flex items-center justify-between mb-2 gap-2">
                     <p className="text-[10px] text-cyan-600 font-bold uppercase tracking-widest">
                         Snapshots Buffer: {snapshots.length} / 8
@@ -677,7 +737,61 @@ export default function Task1Panel() {
                 <p className="text-[10px] text-gray-500 mt-3 uppercase tracking-wide">
                     Formula: target cm = target pixels * (reference cm / reference pixels)
                 </p>
+                </div>
             </div>
-        </div>
+
+            {isMeasurementFullscreen && frozenFrameUrl && (
+                <div className="fixed inset-0 z-[90] bg-black/95 p-4 sm:p-6">
+                    <div className="mx-auto flex h-full w-full max-w-[96vw] flex-col rounded-xl border border-cyan-500/30 bg-[#03090d] p-3 sm:p-4">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                            <div className="text-[10px] text-cyan-500/80 uppercase tracking-widest">
+                                {frameMeta
+                                    ? `${frameMeta.cam} • ${frameMeta.timestamp}`
+                                    : "Captured Frame"}
+                            </div>
+                            <button
+                                onClick={() =>
+                                    setIsMeasurementFullscreen(false)}
+                                className="px-3 py-1 rounded border border-red-800/70 bg-red-950/30 text-[10px] text-red-300 font-bold uppercase tracking-wider hover:bg-red-900/40 transition-colors"
+                            >
+                                Exit Fullscreen (Esc)
+                            </button>
+                        </div>
+
+                        <div className="mb-3 grid grid-cols-1 gap-2 rounded-lg border border-cyan-900/30 bg-black/40 p-2 sm:grid-cols-[minmax(220px,320px)_auto_auto] sm:items-center">
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={referenceLengthInput}
+                                onChange={(event) =>
+                                    setReferenceLengthInput(event.target.value)}
+                                placeholder="Reference length (cm)"
+                                className="bg-[#040c0f] border border-cyan-800/50 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                            />
+                            <button
+                                onClick={applyReferenceLength}
+                                className="px-3 py-2 rounded-lg border border-cyan-600/60 bg-cyan-950/50 text-cyan-300 text-[10px] font-bold uppercase tracking-widest"
+                            >
+                                Calibrate
+                            </button>
+                            <p className="text-[10px] text-cyan-500/80 uppercase tracking-wide sm:text-right">
+                                {pixelRatio
+                                    ? `Ratio ready: 1 px = ${pixelRatio.toFixed(4)} cm`
+                                    : "Ratio not set"}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-1 items-center justify-center overflow-auto rounded-lg border border-slate-700/70 bg-black/70 p-1.5 sm:p-2">
+                            <canvas
+                                ref={canvasRef}
+                                onClick={handleCanvasClick}
+                                className="block h-auto max-h-[calc(100vh-9rem)] w-auto max-w-[calc(100vw-2rem)] rounded cursor-crosshair"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }

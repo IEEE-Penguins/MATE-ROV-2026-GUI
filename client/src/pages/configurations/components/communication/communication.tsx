@@ -20,7 +20,7 @@ export default function Communication() {
     // --- Local State Management ---
     const [logs, setLogs] = useState<string[]>([]);
     const [rosBridgeUrl, setRosBridgeUrl] = useState(
-        "ws://localhost:9090",
+        "ws://192.168.1.100:9090",
     );
     const [customUrl, setCustomUrl] = useState("");
     const [isRovConnected, setIsRovConnected] = useAtom(

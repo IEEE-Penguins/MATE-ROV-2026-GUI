@@ -54,7 +54,7 @@ export default function LeftSensorsOverlay() {
                 <div className="flex flex-col justify-center h-[400px] ml-2">
                     <div className="flex flex-col items-start leading-none">
                         <span className="text-5xl font-black text-[#00013F] drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
-                            {depth.toFixed(1)}
+                            {depth.toFixed(2)}
                         </span>
                         <span className="text-xl font-bold text-white mt-2 tracking-widest uppercase">
                             Meters
