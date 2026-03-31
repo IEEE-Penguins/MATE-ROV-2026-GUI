@@ -21,7 +21,7 @@ const cameras: CameraConfig[] = [
     {
         id: 1,
         feedId: "cam1-feed",
-        src: "underwater.webp",
+        src: "http://192.168.1.100:8080/stream?topic=/cam_front/image_raw",
         alt: "Camera 1",
         label: "CAM 1",
         labelPositionClass: "top-4 right-4",
@@ -29,7 +29,7 @@ const cameras: CameraConfig[] = [
     {
         id: 2,
         feedId: "cam2-feed",
-        src: "underwater2.webp",
+        src: "http://192.168.1.100:8080/stream?topic=/cam_rear/image_raw",
         alt: "Camera 2",
         label: "CAM 2",
         labelPositionClass: "top-4 left-4",
@@ -37,7 +37,7 @@ const cameras: CameraConfig[] = [
     {
         id: 3,
         feedId: "cam3-feed",
-        src: "underwater3.webp",
+        src: "http://192.168.1.100:8080/stream?topic=/cam_left/image_raw",
         alt: "Camera 3",
         label: "CAM 3",
         labelPositionClass: "top-4 right-4",
@@ -45,7 +45,7 @@ const cameras: CameraConfig[] = [
     {
         id: 4,
         feedId: "cam4-feed",
-        src: "underwater4.webp",
+        src: "http://192.168.1.100:8080/stream?topic=/cam_right/image_raw",
         alt: "Camera 4",
         label: "CAM 4",
         labelPositionClass: "top-4 left-4",
