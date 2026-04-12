@@ -4,11 +4,13 @@ const DEFAULT_ROS_BRIDGE_URL = "ws://localhost:9090";
 const COMMAND_TOPIC_NAME = "/rov/command";
 const SENSORS_TOPIC_NAME = "/rov/sensors";
 const AI_TOPIC_NAME = "/crab_count";
-const AI_DETECTION_TOPIC_NAME = "/detected_image";
+const AI_DETECTION_TOPIC_NAME = "/AI_Detection";
+
+
 const COMMAND_MESSAGE_TYPE = "std_msgs/String";
 const SENSORS_MESSAGE_TYPE = "std_msgs/String";
 const AI_MESSAGE_TYPE = "std_msgs/Int32";
-const AI_DETECTION_MESSAGE_TYPE = "sensor_msgs/Image";
+const AI_DETECTION_MESSAGE_TYPE = "sensor_msgs/CompressedImage";
 
 let ros = null;
 let commandPublisher = null;
@@ -69,17 +71,35 @@ const handleSensorData = (message) => {
  */
 const handleAIDetectionImage = (message) => {
     try {
-        const { data, width, height, encoding } = message;
+        const { data, format } = message;
 
-        // data is a base64-encoded string from rosbridge for uint8 arrays
-        const base64Image = typeof data === "string" ? data : Buffer.from(data).toString("base64");
-        console.log("handling the image");
+        if (!data) {
+            log("Received empty AI detection image data.");
+            return;
+        }
+
+        let imageBuffer;
+
+        if (typeof data === "string") {
+            imageBuffer = Buffer.from(data, "base64");
+        } else if (Array.isArray(data)) {
+            imageBuffer = Buffer.from(data);
+        } else {
+            console.log("Unsupported AI detection image data format");
+        }
+
+        const normalizedFormat =
+            typeof format === "string" ? format.toLowerCase() : "";
+
+        const mimeType = normalizedFormat.includes("png")
+            ? "image/png"
+            : "image/jpeg";
+
+        const dataUrl = `data:${mimeType};base64,${imageBuffer.toString("base64")}`;
+
         if (io) {
             io.emit("ai:detection-image", {
-                image: base64Image,
-                width,
-                height,
-                encoding,
+                image: dataUrl,
             });
         }
     } catch (error) {
