@@ -50,27 +50,41 @@ const formatLocalTimestamp = (date: Date) => {
     });
 };
 
-socket.on("float:history", (payload: {packets?: Partial<FloatMissionPacket>[]}) => {
-    const packets = Array.isArray(payload?.packets) ? payload.packets : [];
-    const normalizedPackets = packets
-        .map((packet) => {
-            const normalizedDepth = Number(packet.depthMeters);
-            if (!Number.isFinite(normalizedDepth)) return null;
+socket.on(
+    "float:history",
+    (payload: {packets?: Partial<FloatMissionPacket>[]}) => {
+        const packets = Array.isArray(payload?.packets)
+            ? payload.packets
+            : [];
+        const normalizedPackets = packets
+            .map((packet) => {
+                const normalizedDepth = Number(packet.depthMeters);
+                if (!Number.isFinite(normalizedDepth)) return null;
 
-            const normalizedPressure = Number(packet.pressureKpa);
-            return {
-                companyId: packet.companyId?.trim() || "PN01",
-                timestamp: packet.timestamp?.trim() || formatLocalTimestamp(new Date()),
-                pressureKpa: Number.isFinite(normalizedPressure)
-                    ? normalizedPressure
-                    : Number((Math.max(0, normalizedDepth) * 9.8).toFixed(2)),
-                depthMeters: normalizedDepth,
-            };
-        })
-        .filter((packet): packet is FloatMissionPacket => packet !== null);
+                const normalizedPressure = Number(packet.pressureKpa);
+                return {
+                    companyId: packet.companyId?.trim() || "PN01",
+                    timestamp:
+                        packet.timestamp?.trim() ||
+                        formatLocalTimestamp(new Date()),
+                    pressureKpa: Number.isFinite(normalizedPressure)
+                        ? normalizedPressure
+                        : Number(
+                              (
+                                  Math.max(0, normalizedDepth) * 9.8
+                              ).toFixed(2),
+                          ),
+                    depthMeters: normalizedDepth,
+                };
+            })
+            .filter(
+                (packet): packet is FloatMissionPacket =>
+                    packet !== null,
+            );
 
-    store.set(task4ProfileDataAtom, normalizedPackets);
-});
+        store.set(task4ProfileDataAtom, normalizedPackets);
+    },
+);
 //..............................................................
 
 // Task 2: AI Detection
@@ -79,19 +93,10 @@ socket.on("ai:green-crab-detected", (count: number) => {
 });
 
 // Task 2: AI Detection Image
-socket.on(
-    "ai:detection-image",
-    (data: {
-        image: string;
-        width: number;
-        height: number;
-        encoding: string;
-    }) => {
-        const dataUrl = `data:image/jpeg;base64,${data.image}`;
-        store.set(task2AIDetectionImageAtom, dataUrl);
-        console.log("Anything");
-    },
-);
+socket.on("ai:detection-image", (data: {image: string}) => {
+    store.set(task2AIDetectionImageAtom, data.image);
+    console.log("AI detection image received");
+});
 
 // Task 4: Depth Tracking
 socket.on("float:depth-update", (depth: number) => {
@@ -103,20 +108,27 @@ socket.on("float:depth-update", (depth: number) => {
     });
 });
 
-socket.on("float:data-packet", (packet: Partial<FloatMissionPacket>) => {
-    const normalizedDepth = Number(packet.depthMeters);
-    if (!Number.isFinite(normalizedDepth)) return;
+socket.on(
+    "float:data-packet",
+    (packet: Partial<FloatMissionPacket>) => {
+        const normalizedDepth = Number(packet.depthMeters);
+        if (!Number.isFinite(normalizedDepth)) return;
 
-    const normalizedPressure = Number(packet.pressureKpa);
-    appendTask4Packet({
-        companyId: packet.companyId?.trim() || "PN01",
-        timestamp: packet.timestamp?.trim() || formatLocalTimestamp(new Date()),
-        pressureKpa: Number.isFinite(normalizedPressure)
-            ? normalizedPressure
-            : Number((Math.max(0, normalizedDepth) * 9.8).toFixed(2)),
-        depthMeters: normalizedDepth,
-    });
-});
+        const normalizedPressure = Number(packet.pressureKpa);
+        appendTask4Packet({
+            companyId: packet.companyId?.trim() || "PN01",
+            timestamp:
+                packet.timestamp?.trim() ||
+                formatLocalTimestamp(new Date()),
+            pressureKpa: Number.isFinite(normalizedPressure)
+                ? normalizedPressure
+                : Number(
+                      (Math.max(0, normalizedDepth) * 9.8).toFixed(2),
+                  ),
+            depthMeters: normalizedDepth,
+        });
+    },
+);
 
 socket.on("iceberg:result", (payload) => {
     store.set(icebergCalculationAtom, payload);
