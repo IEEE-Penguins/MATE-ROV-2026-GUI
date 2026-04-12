@@ -26,7 +26,7 @@ export default function Communication() {
     const [isRovConnected, setIsRovConnected] = useAtom(
         isRovConnectedAtom,
     );
-    const [isControllerConnected, setIsControllerConnected] = useAtom(
+    const [isControllerConnected] = useAtom(
         isControllerConnectedAtom,
     );
 
@@ -41,7 +41,7 @@ export default function Communication() {
     };
 
     /**
-     * Main effect hook for managing socket event listeners and gamepad polling
+     * Main effect hook for managing socket event listeners
      */
     useEffect(() => {
         // --- Socket Event Handlers ---
@@ -71,18 +71,6 @@ export default function Communication() {
             addLog(`ERROR: ${errorMsg}`);
         };
 
-        // --- Gamepad Connection Polling ---
-        const checkGamepad = () => {
-            const gamepads = navigator.getGamepads();
-            const isConnected = Array.from(gamepads).some(
-                (gp) => gp !== null,
-            );
-            setIsControllerConnected((prev) =>
-                prev === isConnected ? prev : isConnected,
-            );
-        };
-        const gamepadInterval = window.setInterval(checkGamepad, 500);
-
         // --- Register Socket Listeners ---
         socket.on("rov:log", handleLogMessage);
         socket.on("rov:error", handleError);
@@ -103,9 +91,8 @@ export default function Communication() {
                 "rov:connection-status",
                 handleRosBridgeConnectionStatus,
             );
-            clearInterval(gamepadInterval);
         };
-    }, [setIsControllerConnected, setIsRovConnected]);
+    }, [setIsRovConnected]);
 
     // --- Action Handlers ---
     const handleRosBridgeConnect = () => {
