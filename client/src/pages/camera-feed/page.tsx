@@ -4,6 +4,7 @@ import RightSideButtons from "./components/RightSideButtons";
 import Task1Panel from "./components/Task1Panel";
 import Task2Panel from "./components/Task2Panel";
 import IcebergThreatPanel from "./components/IcebergThreatPanel";
+import Task25Panel from "./components/Task25Panel";
 import Task4Panel from "./components/Task4Panel";
 import LeftSensorsOverlay from "./components/LeftSensorsOverlay";
 import {RiEyeLine, RiEyeOffLine} from "react-icons/ri";
@@ -159,6 +160,7 @@ export default function CameraFeed() {
                             {activePanel === 21 && <Task2Panel />}
                             {activePanel === 22 &&
                                 <IcebergThreatPanel />}
+                            {activePanel === 25 && <Task25Panel />}
                             {activePanel === 4 && <Task4Panel />}
                         </div>
                     </div>

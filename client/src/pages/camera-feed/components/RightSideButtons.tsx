@@ -9,6 +9,7 @@ export default function RightSideButtons({ activePanel, setActivePanel }: RightS
     { id: 1, label: "1" },
     { id: 21, label: "2.1" },
     { id: 22, label: "2.2" },
+    { id: 25, label: "2.5" },
     { id: 4, label: "4" },
   ];
 

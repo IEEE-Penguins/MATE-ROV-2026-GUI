@@ -11,7 +11,7 @@ const TASKS = {
     { id: "2.2", label: "2.2 Iceberg Tracking" },
     { id: "2.3", label: "2.3 Whale Safe Gear" },
     { id: "2.4", label: "2.4 Recover Anchor" },
-    { id: "2.5", label: "2.5 Service Observatory" },
+    { id: "2.5", label: "2.5 Service Holyrood Observatory" },
   ],
   task3: [
     { id: "3.1", label: "3.1 Install Micropile" },
