@@ -1,5 +1,12 @@
-import {useAtom} from "jotai";
-import {rovSensorDataAtom} from "../../../../atoms/atoms";
+import {useEffect} from "react";
+import {useAtom, useAtomValue} from "jotai";
+import {
+    isControllerConnectedAtom,
+    isRovConnectedAtom,
+    rovSensorDataAtom,
+} from "../../../../atoms/atoms";
+import ConnectionButton from "../../../components/connection/connection-button";
+import {events, socket} from "../../../utils/socket/socket";
 
 interface SensorItemProps {
     label: string;
@@ -7,11 +14,18 @@ interface SensorItemProps {
     labels: string[];
 }
 
+const ROS_BRIDGE_URL = "ws://192.168.1.100:9090";
+
 export default function LeftSensorsOverlay() {
-    const [sensorsData] = useAtom(rovSensorDataAtom);
+    const sensorsData = useAtomValue(rovSensorDataAtom);
+    const [isRovConnected, setIsRovConnected] = useAtom(
+        isRovConnectedAtom,
+    );
+    const isControllerConnected = useAtomValue(
+        isControllerConnectedAtom,
+    );
 
     const depth = sensorsData?.depth ?? 0.0;
-    
     const acc = Array.isArray(sensorsData?.mpu?.acc)
         ? sensorsData.mpu.acc
         : [0, 0, 0];
@@ -25,6 +39,33 @@ export default function LeftSensorsOverlay() {
 
     const maxDepth = 5;
     const fillPercentage = (depth / maxDepth) * 100;
+
+    useEffect(() => {
+        const handleRosBridgeConnectionStatus = (status: {
+            status: "connected" | "disconnected" | "error";
+        }) => {
+            setIsRovConnected(status.status === "connected");
+        };
+
+        socket.on("rov:connection-status", handleRosBridgeConnectionStatus);
+        events.checkRosBridgeStatus();
+
+        return () => {
+            socket.off(
+                "rov:connection-status",
+                handleRosBridgeConnectionStatus,
+            );
+        };
+    }, [setIsRovConnected]);
+
+    const handleRosButtonClick = () => {
+        if (isRovConnected) {
+            events.disconnectFromRosBridge();
+            return;
+        }
+
+        events.connectToRosBridge(ROS_BRIDGE_URL);
+    };
 
     return (
         <div className="absolute left-4 top-20 z-40 flex flex-col gap-0.5 select-none">
@@ -63,8 +104,7 @@ export default function LeftSensorsOverlay() {
                 </div>
             </div>
 
-            {/* mpu */}
-            <div className="space-y-1.5 bg-black/70 backdrop-blur-md p-3 rounded-2xl border border-white/5 w-52 shadow-2xl">
+            <div className="space-y-1.5 bg-black/70 backdrop-blur-md p-3 rounded-2xl border border-white/5 w-72 shadow-2xl">
                 <SensorItem
                     label="MPU (Acceleration)"
                     values={acc}
@@ -87,6 +127,65 @@ export default function LeftSensorsOverlay() {
                     <span className="text-cyan-400 font-black">
                         {tempIn.toFixed(2)} °C
                     </span>
+                </div>
+
+                <div className="pt-2 border-t border-white/10 space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                ROS 192.168.1.100
+                            </p>
+                            <p
+                                className={`text-xs font-semibold ${
+                                    isRovConnected
+                                        ? "text-cyan-300"
+                                        : "text-gray-400"
+                                }`}
+                            >
+                                {isRovConnected
+                                    ? "Connected"
+                                    : "Disconnected"}
+                            </p>
+                        </div>
+                        <ConnectionButton
+                            label={isRovConnected
+                                ? "Disconnect"
+                                : "Connect"}
+                            connected={isRovConnected}
+                            onClick={handleRosButtonClick}
+                            className="w-28 py-2 text-xs"
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                Controller
+                            </p>
+                            <p
+                                className={`text-xs font-semibold ${
+                                    isControllerConnected
+                                        ? "text-cyan-300"
+                                        : "text-gray-400"
+                                }`}
+                            >
+                                {isControllerConnected
+                                    ? "Connected"
+                                    : "Disconnected"}
+                            </p>
+                        </div>
+                        <ConnectionButton
+                            label={
+                                isControllerConnected
+                                    ? "Connected"
+                                    : "Disconnected"
+                            }
+                            connected={isControllerConnected}
+                            onClick={() => {}}
+                            disabled
+                            className="w-28 py-2 text-xs"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
