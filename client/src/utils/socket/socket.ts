@@ -5,6 +5,7 @@ import {
     rovSensorDataAtom,
     task2GreenCrabsAtom,
     task2AIDetectionImageAtom,
+    task2TrackingAtom,
     task4ProfileDataAtom,
     icebergCalculationAtom,
     icebergErrorAtom,
@@ -28,6 +29,7 @@ socket.on("connect", () => {
 
 socket.on("disconnect", () => {
     console.log("Socket disconnected");
+    store.set(task2TrackingAtom, false);
 });
 
 socket.on("connect_error", (error) => {
@@ -90,11 +92,13 @@ socket.on(
 // Task 2: AI Detection
 socket.on("ai:green-crab-detected", (count: number) => {
     store.set(task2GreenCrabsAtom, count);
+    store.set(task2TrackingAtom, true);
 });
 
 // Task 2: AI Detection Image
 socket.on("ai:detection-image", (data: {image: string}) => {
     store.set(task2AIDetectionImageAtom, data.image);
+    store.set(task2TrackingAtom, Boolean(data.image));
     console.log("AI detection image received");
 });
 
@@ -129,6 +133,10 @@ socket.on(
         });
     },
 );
+
+socket.on("float:cleared", () => {
+    store.set(task4ProfileDataAtom, []);
+});
 
 socket.on("iceberg:result", (payload) => {
     store.set(icebergCalculationAtom, payload);

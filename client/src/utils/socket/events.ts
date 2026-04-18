@@ -71,6 +71,13 @@ export const initializeEvents = (socket: Socket) => ({
     },
 
     /**
+     * Clears all persisted float mission packets on server.
+     */
+    clearFloatMissionPackets: () => {
+        socket.emit("float:clear-history");
+    },
+
+    /**
      * Calculates iceberg threats against reference platforms
      */
     calculateIcebergThreats: (iceberg: {
@@ -78,6 +85,22 @@ export const initializeEvents = (socket: Socket) => ({
         lon: number;
         heading: number;
         keelDepth: number;
+        rawInput?: {
+            latitude: {
+                degrees: number;
+                minutes: number;
+                seconds: number;
+                direction: "N" | "S";
+            };
+            longitude: {
+                degrees: number;
+                minutes: number;
+                seconds: number;
+                direction: "E" | "W";
+            };
+            heading: number;
+            keelDepth: number;
+        };
     }) => {
         socket.emit("iceberg:calculate", iceberg);
     },
