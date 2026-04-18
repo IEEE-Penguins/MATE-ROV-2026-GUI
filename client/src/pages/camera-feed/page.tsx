@@ -91,43 +91,63 @@ export default function CameraFeed() {
                     return (
                         <div
                             key={camera.id}
-                            className={`${isExpanded
-                                ? "absolute inset-1 z-20"
-                                : "relative"} bg-slate-900 border border-slate-800 overflow-hidden group transition-all hover:brightness-110 ${shouldHide ? "hidden" : ""} ${isExpanded ? "border-cyan-500/40" : ""}`}
+                            className={`${
+                                isExpanded
+                                    ? "absolute inset-1 z-20"
+                                    : "relative"
+                            } bg-slate-950 border border-slate-800 overflow-hidden group transition-all duration-300 hover:brightness-110 ${shouldHide ? "hidden" : ""} ${isExpanded ? "border-cyan-500/40" : ""}`}
                         >
                             <img
-                                id={camera.feedId}
                                 src={camera.src}
-                                alt={camera.alt}
-                                className="w-full h-full object-cover"
+                                alt=""
+                                aria-hidden="true"
+                                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-35"
                                 crossOrigin="anonymous"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/25 via-transparent to-[#020617]/70" />
+
+                            <div className="relative z-10 w-full h-full flex items-center justify-center p-2 md:p-3">
+                                <div
+                                    className={`relative w-full h-full rounded-lg border border-cyan-500/20 bg-black/35 shadow-[0_0_30px_rgba(34,211,238,0.08)] ${isExpanded ? "max-w-[min(96vw,calc((100vh-1rem)*4/3))] max-h-[calc(100vh-1rem)]" : ""}`}
+                                >
+                                    <img
+                                        id={camera.feedId}
+                                        src={camera.src}
+                                        alt={camera.alt}
+                                        width={320}
+                                        height={240}
+                                        className="w-full h-full object-contain aspect-[4/3] rounded-lg"
+                                        crossOrigin="anonymous"
+                                    />
+                                </div>
+                            </div>
+
                             <span
                                 className={`absolute ${camera.labelPositionClass} bg-black/70 px-3 py-1 rounded text-xs text-[#38bdf8] font-bold z-10 border border-[#38bdf8]/30 backdrop-blur-sm shadow-lg`}
                             >
                                 {camera.label}
                             </span>
-                            {isExpanded
-                                ? (
-                                    <button
-                                        onClick={() =>
-                                            setExpandedCameraId(null)}
-                                        className="absolute bottom-2 right-2 z-30 rounded-md border border-cyan-500/60 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-100 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                                        title="Collapse"
-                                    >
-                                        Collapse
-                                    </button>
-                                )
-                                : (
-                                    <button
-                                        onClick={() =>
-                                            setExpandedCameraId(camera.id)}
-                                        className="absolute bottom-2 right-2 z-20 rounded-md border border-cyan-500/50 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-200 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                                        title="Expand"
-                                    >
-                                        Expand
-                                    </button>
-                                )}
+                            {isExpanded ? (
+                                <button
+                                    onClick={() =>
+                                        setExpandedCameraId(null)
+                                    }
+                                    className="absolute bottom-2 right-2 z-30 rounded-md border border-cyan-500/60 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-100 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                    title="Collapse"
+                                >
+                                    Collapse
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() =>
+                                        setExpandedCameraId(camera.id)
+                                    }
+                                    className="absolute bottom-2 right-2 z-20 rounded-md border border-cyan-500/50 bg-[#0B1120]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-200 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:border-cyan-300 hover:bg-black focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                    title="Expand"
+                                >
+                                    Expand
+                                </button>
+                            )}
                         </div>
                     );
                 })}
@@ -158,8 +178,9 @@ export default function CameraFeed() {
                         <div className="pointer-events-auto">
                             {activePanel === 1 && <Task1Panel />}
                             {activePanel === 21 && <Task2Panel />}
-                            {activePanel === 22 &&
-                                <IcebergThreatPanel />}
+                            {activePanel === 22 && (
+                                <IcebergThreatPanel />
+                            )}
                             {activePanel === 25 && <Task25Panel />}
                             {activePanel === 4 && <Task4Panel />}
                         </div>

@@ -17,7 +17,7 @@ const SENSITIVITY_VALUES = {
 };
 
 const YAW_SENSITIVITY_VALUES = {
-  High: 1.0,
+  High: 0.9,
   Normal: 0.7,
   Low: 0.4,
 };
@@ -43,7 +43,7 @@ const defaultRovConfiguration = {
   ],
   sensitivity: {
     joystick: "High",
-    yaw: "High",
+    yaw: "Low",
   },
 };
 
@@ -185,6 +185,12 @@ const getFloatPacketHistory = (limit) => {
   return floatMissionPackets.slice(-Math.trunc(limit));
 };
 
+const clearPersistedFloatPackets = () => {
+  ensureFileExists(floatMissionPacketsPath);
+  fs.writeFileSync(floatMissionPacketsPath, "", "utf-8");
+  floatMissionPackets = [];
+};
+
 /**
  * Gets sensitivity scalar values from configuration
  * @param {object} config - ROV configuration
@@ -275,21 +281,19 @@ const mapThrusters = (config, intents) => {
  */
 const mapGrippers = (controllerReadings, config) => {
   const servo = [0, 0, 0, 0];
-
   if (config.grippers[0].enabled) {
-    if (controllerReadings.buttons.Y) servo[0] = 1;
-    if (controllerReadings.buttons.A) servo[0] = -1;
-    if (controllerReadings.buttons.B) servo[1] = 1;
-    if (controllerReadings.buttons.X) servo[1] = -1;
+    if (controllerReadings.buttons.R1) servo[3] = 1;
+    if (controllerReadings.buttons.L1) servo[3] = -1;
+    if (controllerReadings.buttons.B) servo[2] = -1;
+    if (controllerReadings.buttons.X) servo[2] = 1;
   }
 
   if (config.grippers[1].enabled) {
-    if (controllerReadings.buttons.up) servo[2] = 1;
-    if (controllerReadings.buttons.down) servo[2] = -1;
-    if (controllerReadings.buttons.left) servo[3] = 1;
-    if (controllerReadings.buttons.right) servo[3] = -1;
+    if (controllerReadings.buttons.up) servo[0] = 1;
+    if (controllerReadings.buttons.down) servo[0] = -1;
+    if (controllerReadings.buttons.left) servo[1] = 1;
+    if (controllerReadings.buttons.right) servo[1] = -1;
   }
-
   return servo;
 };
 
@@ -304,6 +308,7 @@ const mapLights = (controllerReadings) => {
 };
 
 const toRadians = (degrees) => degrees * (Math.PI / 180);
+const toDegrees = (radians) => radians * (180 / Math.PI);
 
 /**
  * Calculates distance in nautical miles using Haversine formula.
@@ -322,21 +327,80 @@ const calculateDistanceNm = (lat1, lon1, lat2, lon2) => {
 };
 
 /**
- * Applies the exact surface and subsea threat rules for one platform.
+ * Calculates the initial bearing from point A to point B.
+ */
+const calculateBearing = (lat1, lon1, lat2, lon2) => {
+  const phi1 = toRadians(lat1);
+  const phi2 = toRadians(lat2);
+  const deltaLambda = toRadians(lon2 - lon1);
+
+  const y = Math.sin(deltaLambda) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2)
+    - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+
+  const theta = Math.atan2(y, x);
+  return (toDegrees(theta) + 360) % 360;
+};
+
+/**
+ * Calculates cross-track distance (shortest perpendicular distance) in NM.
+ */
+const calculateCrossTrackDistanceNm = (distanceNm, bearing, heading) => {
+  const distanceRad = distanceNm / EARTH_RADIUS_NM;
+  const bearingRad = toRadians(bearing);
+  const headingRad = toRadians(heading);
+
+  const crossTrackRad = Math.asin(
+    Math.sin(distanceRad) * Math.sin(bearingRad - headingRad),
+  );
+
+  return Math.abs(crossTrackRad * EARTH_RADIUS_NM);
+};
+
+/**
+ * Checks if heading is generally moving towards target bearing.
+ */
+const isMovingTowards = (bearing, heading) => {
+  let diff = Math.abs(bearing - heading);
+  if (diff > 180) diff = 360 - diff;
+  return diff <= 90;
+};
+
+/**
+ * Applies the exact surface and subsea threat rules for one platform using projected path geometry.
  */
 const calculateThreats = (iceberg, platform) => {
-  const distance = calculateDistanceNm(iceberg.lat, iceberg.lon, platform.lat, platform.lon);
+  const startDistance = calculateDistanceNm(
+    iceberg.lat,
+    iceberg.lon,
+    platform.lat,
+    platform.lon,
+  );
+  const bearingToPlatform = calculateBearing(
+    iceberg.lat,
+    iceberg.lon,
+    platform.lat,
+    platform.lon,
+  );
+  const movingTowards = isMovingTowards(bearingToPlatform, iceberg.heading);
+  const crossTrackDistance = calculateCrossTrackDistanceNm(
+    startDistance,
+    bearingToPlatform,
+    iceberg.heading,
+  );
+
+  const effectiveDistance = movingTowards ? crossTrackDistance : Infinity;
 
   const calculateSurfaceThreat = () => {
     const depthRatio = iceberg.keelDepth / platform.depth;
     if (depthRatio >= 1.1) return "GREEN";
-    if (distance < 5) return "RED";
-    if (distance >= 5 && distance <= 10) return "YELLOW";
+    if (effectiveDistance < 5) return "RED";
+    if (effectiveDistance >= 5 && effectiveDistance <= 10) return "YELLOW";
     return "GREEN";
   };
 
   const calculateSubseaThreat = () => {
-    if (distance > 25) return "GREEN";
+    if (effectiveDistance > 25) return "GREEN";
     const depthRatio = iceberg.keelDepth / platform.depth;
     if (depthRatio >= 1.1) return "GREEN";
     if (depthRatio >= 0.9 && depthRatio < 1.1) return "RED";
@@ -346,7 +410,7 @@ const calculateThreats = (iceberg, platform) => {
 
   return {
     platformName: platform.name,
-    distance,
+    distance: crossTrackDistance,
     surfaceThreatLevel: calculateSurfaceThreat(),
     subseaAssetThreatLevel: calculateSubseaThreat(),
   };
@@ -452,6 +516,21 @@ const registerEventHandlers = (io, socket) => {
     });
   });
 
+  socket.on("float:clear-history", () => {
+    try {
+      clearPersistedFloatPackets();
+      io.emit("float:cleared");
+      io.emit("float:history", {
+        total: 0,
+        packets: [],
+      });
+    } catch (error) {
+      socket.emit("float:error", {
+        message: "Failed to clear float mission packet history.",
+      });
+    }
+  });
+
   // Get current configuration
   socket.on("config:get", () => {
     socket.emit("config:data", rovConfiguration);
@@ -500,6 +579,8 @@ const registerEventHandlers = (io, socket) => {
         return;
       }
 
+      const receivedIcebergInput = { ...icebergInput };
+
       const iceberg = {
         lat: Number(icebergInput.lat),
         lon: Number(icebergInput.lon),
@@ -519,6 +600,7 @@ const registerEventHandlers = (io, socket) => {
       });
 
       const payload = {
+        icebergInput: receivedIcebergInput,
         iceberg,
         results,
         timestamp: new Date().toISOString(),

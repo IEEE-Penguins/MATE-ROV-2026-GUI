@@ -10,7 +10,7 @@ export const controllerConnectionAtom = atomWithStorage<boolean>(
     false,
 );
 
-export const controllerDataAtom = atomWithStorage<{
+export const controllerDataAtom = atom<{
     axes: {
         L: number[];
         R: number[];
@@ -33,7 +33,7 @@ export const controllerDataAtom = atomWithStorage<{
         left: boolean;
         right: boolean;
     };
-}>("controller-data", {
+}>({
     axes: {L: [0, 0], R: [0, 0]},
     buttons: {
         L1: false,
@@ -132,6 +132,15 @@ export const icebergCalculationAtom =
 
 export const icebergLoadingAtom = atom(false);
 export const icebergErrorAtom = atom<string | null>(null);
+
+export const checkedSubtasksAtom = atomWithStorage<
+    Record<string, boolean>
+>("checked-subtasks", {});
+
+export const obtainedPointsAtom = atomWithStorage<number>(
+    "obtained-points",
+    0,
+);
 
 // --- Task Specific Atoms ---
 // Task 1

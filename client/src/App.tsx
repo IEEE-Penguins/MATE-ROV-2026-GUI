@@ -20,6 +20,10 @@ export default function App() {
 
     useEffect(() => {
         const checkGamepad = () => {
+            if (typeof navigator.getGamepads !== "function") {
+                setIsControllerConnected(false);
+                return;
+            }
             const gamepads = navigator.getGamepads();
             const isConnected = Array.from(gamepads).some(
                 (gp) => gp !== null,
@@ -56,9 +60,9 @@ export default function App() {
         };
     }, [setIsControllerConnected]);
 
-    ControllerData();
     return (
         <Router>
+            <ControllerData />
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route

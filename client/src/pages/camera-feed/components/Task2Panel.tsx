@@ -3,7 +3,7 @@ import {useAtom} from "jotai";
 import {
     task2GreenCrabsAtom,
     task2AIDetectionImageAtom,
-    task2TrackingAtom,
+    isRovConnectedAtom,
 } from "../../../../atoms/atoms";
 import {RiBarChartBoxLine} from "react-icons/ri";
 
@@ -20,7 +20,7 @@ const MAX_CAPTURES = 10;
 export default function Task2Panel() {
     const [greenCrabs] = useAtom(task2GreenCrabsAtom);
     const [aiDetectionImage] = useAtom(task2AIDetectionImageAtom);
-    const [tracking] = useAtom(task2TrackingAtom);
+    const [isRovConnected] = useAtom(isRovConnectedAtom);
     const [captures, setCaptures] = useState<Task2Capture[]>([]);
     const [captureError, setCaptureError] = useState<string | null>(
         null,
@@ -41,8 +41,8 @@ export default function Task2Panel() {
     }, []);
 
     const canCapture = useMemo(
-        () => tracking && Boolean(aiDetectionImage),
-        [tracking, aiDetectionImage],
+        () => isRovConnected,
+        [isRovConnected],
     );
 
     const persistCaptures = (nextCaptures: Task2Capture[]) => {
@@ -54,7 +54,14 @@ export default function Task2Panel() {
     };
 
     const handleCapture = async () => {
-        if (!aiDetectionImage || !tracking) {
+        if (!isRovConnected) {
+            return;
+        }
+
+        if (!aiDetectionImage) {
+            setCaptureError(
+                "No detection image available yet. Please wait for the AI feed.",
+            );
             return;
         }
 
