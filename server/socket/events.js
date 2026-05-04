@@ -17,8 +17,8 @@ const SENSITIVITY_VALUES = {
 };
 
 const YAW_SENSITIVITY_VALUES = {
-  High: 0.9,
-  Normal: 0.7,
+  High: 0.6,
+  Normal: 0.6,
   Low: 0.4,
 };
 
@@ -592,6 +592,8 @@ const registerEventHandlers = (io, socket) => {
         const threat = calculateThreats(iceberg, platform);
         return {
           name: threat.platformName,
+          lat: platform.lat,
+          lon: platform.lon,
           distance: Number(threat.distance.toFixed(2)),
           surfaceThreatLevel: threat.surfaceThreatLevel,
           subseaAssetThreatLevel: threat.subseaAssetThreatLevel,

@@ -1,61 +1,69 @@
 {
   "icebergInput": {
-    "lat": 47.75,
-    "lon": -48.483333333333334,
-    "heading": 181,
-    "keelDepth": 126,
+    "lat": 47.88333333333333,
+    "lon": -47.85,
+    "heading": 188,
+    "keelDepth": 112,
     "rawInput": {
       "latitude": {
         "degrees": 47,
-        "minutes": 45,
+        "minutes": 53,
         "seconds": 0,
         "direction": "N"
       },
       "longitude": {
-        "degrees": 48,
-        "minutes": 29,
+        "degrees": 47,
+        "minutes": 51,
         "seconds": 0,
         "direction": "W"
       },
-      "heading": 181,
-      "keelDepth": 126
+      "heading": 188,
+      "keelDepth": 112
     }
   },
   "iceberg": {
-    "lat": 47.75,
-    "lon": -48.483333333333334,
-    "heading": 181,
-    "keelDepth": 126
+    "lat": 47.88333333333333,
+    "lon": -47.85,
+    "heading": 188,
+    "keelDepth": 112
   },
   "results": [
     {
       "name": "Hibernia",
-      "distance": 11.23,
+      "lat": 46.7504,
+      "lon": -48.7819,
+      "distance": 28.53,
       "surfaceThreatLevel": "GREEN",
       "subseaAssetThreatLevel": "GREEN",
       "depth": 78
     },
     {
       "name": "Sea Rose",
-      "distance": 14.87,
-      "surfaceThreatLevel": "GREEN",
-      "subseaAssetThreatLevel": "GREEN",
+      "lat": 46.7895,
+      "lon": -48.146,
+      "distance": 2.91,
+      "surfaceThreatLevel": "RED",
+      "subseaAssetThreatLevel": "RED",
       "depth": 107
     },
     {
       "name": "Terra Nova",
-      "distance": 4.86,
+      "lat": 46.4,
+      "lon": -48.4,
+      "distance": 10.17,
       "surfaceThreatLevel": "GREEN",
       "subseaAssetThreatLevel": "GREEN",
       "depth": 91
     },
     {
       "name": "Hebron",
-      "distance": 0.17,
+      "lat": 46.544,
+      "lon": -48.518,
+      "distance": 16.14,
       "surfaceThreatLevel": "GREEN",
       "subseaAssetThreatLevel": "GREEN",
       "depth": 93
     }
   ],
-  "timestamp": "2026-04-18T10:27:04.660Z"
+  "timestamp": "2026-04-24T15:24:10.505Z"
 }
