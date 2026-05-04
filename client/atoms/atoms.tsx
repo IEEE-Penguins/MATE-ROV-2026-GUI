@@ -102,6 +102,8 @@ export interface IcebergInput {
 
 export interface IcebergPlatformResult {
     name: string;
+    lat?: number;
+    lon?: number;
     distance: number;
     surfaceThreatLevel: ThreatLevel;
     subseaAssetThreatLevel: ThreatLevel;
@@ -182,3 +184,18 @@ export const task4MaxDepthAtom = atom(0);
 export const task4AscentRateAtom = atom(0);
 export const task4TargetDepthAtom = atom(3.0);
 export const task4StabilityAtom = atom(98.2);
+
+// Task 2.5
+export interface Task25HolyroodState {
+    counts: number[];
+    sensorRecovered: boolean;
+}
+
+export const task25HolyroodStateAtom =
+    atomWithStorage<Task25HolyroodState>(
+        "task25-holyrood-observatory",
+        {
+            counts: [19, 3, 1, 9, 10, 5, 8, 10, 12, 7],
+            sensorRecovered: false,
+        },
+    );

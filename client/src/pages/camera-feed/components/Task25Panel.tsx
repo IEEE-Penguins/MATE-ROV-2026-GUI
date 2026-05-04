@@ -1,5 +1,7 @@
 import {useEffect, useMemo, useState} from "react";
+import {useAtom} from "jotai";
 import {RiBarChartBoxLine} from "react-icons/ri";
+import {task25HolyroodStateAtom} from "../../../../atoms/atoms";
 
 type HolyroodSpecies = {
     id: string;
@@ -16,11 +18,6 @@ type FrequencyCalculation = {
     total: number;
     rows: FrequencyRow[];
     calculatedAt: string;
-};
-
-type StoredTask25State = {
-    counts: number[];
-    sensorRecovered: boolean;
 };
 
 const HOLYROOD_SPECIES: HolyroodSpecies[] = [
@@ -67,7 +64,6 @@ const HOLYROOD_SPECIES: HolyroodSpecies[] = [
 ];
 
 const DEFAULT_COUNTS = [19, 3, 1, 9, 10, 5, 8, 10, 12, 7];
-const TASK25_STORAGE_KEY = "task25-holyrood-observatory";
 
 const isTransientNumericInput = (value: string) => {
     return value === "" || value === "-";
@@ -104,54 +100,36 @@ const buildFrequencyCalculation = (
 };
 
 export default function Task25Panel() {
-    const [counts, setCounts] = useState<number[]>(DEFAULT_COUNTS);
-    const [draftCounts, setDraftCounts] = useState<string[]>(
-        DEFAULT_COUNTS.map((count) => String(count)),
+    const [task25State, setTask25State] = useAtom(
+        task25HolyroodStateAtom,
     );
-    const [sensorRecovered, setSensorRecovered] = useState(false);
+
+    const counts = useMemo(() => {
+        const storedCounts = Array.isArray(task25State.counts)
+            ? task25State.counts
+            : [];
+
+        if (storedCounts.length !== HOLYROOD_SPECIES.length) {
+            return DEFAULT_COUNTS;
+        }
+
+        return storedCounts.map((value) =>
+            sanitizeCount(Number(value)),
+        );
+    }, [task25State.counts]);
+
+    const sensorRecovered = task25State.sensorRecovered;
+
+    const [draftCounts, setDraftCounts] = useState<string[]>(
+        counts.map((count) => String(count)),
+    );
     const [calculation, setCalculation] =
         useState<FrequencyCalculation | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem(TASK25_STORAGE_KEY);
-            if (!saved) return;
-
-            const parsed = JSON.parse(saved) as Partial<StoredTask25State>;
-            const storedCounts = parsed.counts;
-            const hasValidCounts =
-                Array.isArray(storedCounts) &&
-                storedCounts.length === HOLYROOD_SPECIES.length;
-
-            if (hasValidCounts) {
-                const normalizedCounts = storedCounts.map((value) =>
-                    sanitizeCount(Number(value)),
-                );
-                setCounts(normalizedCounts);
-                setDraftCounts(
-                    normalizedCounts.map((value) => String(value)),
-                );
-            }
-
-            if (typeof parsed.sensorRecovered === "boolean") {
-                setSensorRecovered(parsed.sensorRecovered);
-            }
-        } catch {
-            // Ignore malformed browser storage data.
-        }
-    }, []);
-
-    useEffect(() => {
-        const persistedState: StoredTask25State = {
-            counts,
-            sensorRecovered,
-        };
-        localStorage.setItem(
-            TASK25_STORAGE_KEY,
-            JSON.stringify(persistedState),
-        );
-    }, [counts, sensorRecovered]);
+        setDraftCounts(counts.map((count) => String(count)));
+    }, [counts]);
 
     const currentTotal = useMemo(
         () => counts.reduce((sum, count) => sum + count, 0),
@@ -182,53 +160,61 @@ export default function Task25Panel() {
             if (!Number.isFinite(parsed) || parsed < 0) return;
 
             const normalized = sanitizeCount(parsed);
-            setCounts((prev) => {
-                const next = [...prev];
-                next[index] = normalized;
-                return next;
+            setTask25State((prev) => {
+                const previousCounts =
+                    Array.isArray(prev.counts) &&
+                    prev.counts.length === HOLYROOD_SPECIES.length
+                        ? prev.counts
+                        : DEFAULT_COUNTS;
+                const nextCounts = [...previousCounts];
+                nextCounts[index] = normalized;
+                return {...prev, counts: nextCounts};
             });
             setCalculation(null);
             setError(null);
         };
 
-    const handleInputBlur =
-        (index: number) =>
-        () => {
-            const raw = draftCounts[index];
+    const handleInputBlur = (index: number) => () => {
+        const raw = draftCounts[index];
 
-            if (isTransientNumericInput(raw)) {
-                setDraftCounts((prev) => {
-                    const next = [...prev];
-                    next[index] = String(counts[index]);
-                    return next;
-                });
-                return;
-            }
-
-            const parsed = Number(raw);
-            if (!Number.isFinite(parsed) || parsed < 0) {
-                setDraftCounts((prev) => {
-                    const next = [...prev];
-                    next[index] = String(counts[index]);
-                    return next;
-                });
-                return;
-            }
-
-            const normalized = sanitizeCount(parsed);
+        if (isTransientNumericInput(raw)) {
             setDraftCounts((prev) => {
                 const next = [...prev];
-                next[index] = String(normalized);
+                next[index] = String(counts[index]);
                 return next;
             });
-            setCounts((prev) => {
+            return;
+        }
+
+        const parsed = Number(raw);
+        if (!Number.isFinite(parsed) || parsed < 0) {
+            setDraftCounts((prev) => {
                 const next = [...prev];
-                next[index] = normalized;
+                next[index] = String(counts[index]);
                 return next;
             });
-            setCalculation(null);
-            setError(null);
-        };
+            return;
+        }
+
+        const normalized = sanitizeCount(parsed);
+        setDraftCounts((prev) => {
+            const next = [...prev];
+            next[index] = String(normalized);
+            return next;
+        });
+        setTask25State((prev) => {
+            const previousCounts =
+                Array.isArray(prev.counts) &&
+                prev.counts.length === HOLYROOD_SPECIES.length
+                    ? prev.counts
+                    : DEFAULT_COUNTS;
+            const nextCounts = [...previousCounts];
+            nextCounts[index] = normalized;
+            return {...prev, counts: nextCounts};
+        });
+        setCalculation(null);
+        setError(null);
+    };
 
     const calculateFrequencyTable = () => {
         const result = buildFrequencyCalculation(counts);
@@ -264,10 +250,7 @@ export default function Task25Panel() {
             .replace(/[:.]/g, "-");
 
         const rows: string[][] = [
-            [
-                "Task",
-                "2.5 Service the Holyrood subsea observatory",
-            ],
+            ["Task", "2.5 Service the Holyrood subsea observatory"],
             ["Generated At", generatedAtLabel],
             [
                 "Sensor Recovered To Pool Deck",
@@ -275,10 +258,7 @@ export default function Task25Panel() {
             ],
             ["Recovery Points", sensorRecovered ? "5" : "0"],
             ["Frequency Table Points", "10"],
-            [
-                "Total Score",
-                `${(sensorRecovered ? 5 : 0) + 10} / 15`,
-            ],
+            ["Total Score", `${(sensorRecovered ? 5 : 0) + 10} / 15`],
             [],
             ["Species", "Number Seen", "Percent Frequency"],
             ...HOLYROOD_SPECIES.map((species, index) => [
@@ -290,7 +270,9 @@ export default function Task25Panel() {
         ];
 
         const csvText = rows
-            .map((row) => row.map((cell) => csvEscape(cell)).join(","))
+            .map((row) =>
+                row.map((cell) => csvEscape(cell)).join(","),
+            )
             .join("\n");
 
         const blob = new Blob([csvText], {
@@ -299,8 +281,7 @@ export default function Task25Panel() {
         const downloadUrl = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = downloadUrl;
-        anchor.download =
-            `task2-5-holyrood-frequency-${timestampSlug}.csv`;
+        anchor.download = `task2-5-holyrood-frequency-${timestampSlug}.csv`;
         document.body.appendChild(anchor);
         anchor.click();
         anchor.remove();
@@ -315,7 +296,8 @@ export default function Task25Panel() {
                         <RiBarChartBoxLine className="text-cyan-400 text-lg" />
                     </div>
                     <h2 className="text-base font-bold text-white tracking-wide uppercase">
-                        Task 2.5: Service the Holyrood Subsea Observatory
+                        Task 2.5: Service the Holyrood Subsea
+                        Observatory
                     </h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -344,10 +326,16 @@ export default function Task25Panel() {
                             type="checkbox"
                             checked={sensorRecovered}
                             onChange={(event) =>
-                                setSensorRecovered(event.target.checked)}
+                                setTask25State((prev) => ({
+                                    ...prev,
+                                    sensorRecovered:
+                                        event.target.checked,
+                                }))
+                            }
                             className="h-4 w-4"
                         />
-                        Old eDNA sensor recovered and placed on pool deck
+                        Old eDNA sensor recovered and placed on pool
+                        deck
                     </label>
                 </div>
 
@@ -371,7 +359,9 @@ export default function Task25Panel() {
                             </span>
                         </div>
                         <div className="flex items-center justify-between border-t border-cyan-900/60 pt-1.5 mt-1.5">
-                            <span className="font-semibold">Total</span>
+                            <span className="font-semibold">
+                                Total
+                            </span>
                             <span className="font-semibold text-emerald-300">
                                 {score} / 15
                             </span>
@@ -391,8 +381,12 @@ export default function Task25Panel() {
                     <thead className="bg-[#061119] text-cyan-300 uppercase tracking-wide">
                         <tr>
                             <th className="px-3 py-2">Species</th>
-                            <th className="px-3 py-2 w-36">Number Seen</th>
-                            <th className="px-3 py-2 w-36">% Frequency</th>
+                            <th className="px-3 py-2 w-36">
+                                Number Seen
+                            </th>
+                            <th className="px-3 py-2 w-36">
+                                % Frequency
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -410,8 +404,12 @@ export default function Task25Panel() {
                                         min="0"
                                         step="1"
                                         value={draftCounts[index]}
-                                        onChange={handleInputChange(index)}
-                                        onBlur={handleInputBlur(index)}
+                                        onChange={handleInputChange(
+                                            index,
+                                        )}
+                                        onBlur={handleInputBlur(
+                                            index,
+                                        )}
                                         className="w-24 bg-[#040c0f] border border-cyan-900/50 px-2 py-1 rounded text-sm text-white focus:border-cyan-400 focus:outline-none"
                                     />
                                 </td>
@@ -439,7 +437,8 @@ export default function Task25Panel() {
 
             <div className="mt-3 text-[11px] text-gray-400 flex flex-wrap items-center justify-between gap-2">
                 <span>
-                    Formula: frequency (%) = (number seen / total count) x 100
+                    Formula: frequency (%) = (number seen / total
+                    count) x 100
                 </span>
                 <span>
                     {calculation

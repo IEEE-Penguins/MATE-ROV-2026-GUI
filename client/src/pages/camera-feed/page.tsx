@@ -22,7 +22,7 @@ const cameras: CameraConfig[] = [
     {
         id: 1,
         feedId: "cam1-feed",
-        src: "http://192.168.1.100:8080/stream?topic=/cam_front/image_raw",
+        src: "http://192.168.1.100:8080/stream?topic=/cam_rear/image_raw",
         alt: "Camera 1",
         label: "CAM 1",
         labelPositionClass: "top-4 right-4",
@@ -30,7 +30,7 @@ const cameras: CameraConfig[] = [
     {
         id: 2,
         feedId: "cam2-feed",
-        src: "http://192.168.1.100:8080/stream?topic=/cam_rear/image_raw",
+        src: "http://192.168.1.100:8080/stream?topic=/cam_front/image_raw",
         alt: "Camera 2",
         label: "CAM 2",
         labelPositionClass: "top-4 left-4",

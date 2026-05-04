@@ -6,9 +6,13 @@ import {
     icebergLoadingAtom,
     icebergErrorAtom,
 } from "../../../../atoms/atoms";
-import type {ThreatLevel} from "../../../../atoms/atoms";
+import type {
+    ThreatLevel,
+    IcebergPlatformResult,
+} from "../../../../atoms/atoms";
 import {events} from "../../../utils/socket/socket";
 import {RiShipLine} from "react-icons/ri";
+import IcebergTrajectoryMap from "./IcebergTrajectoryMap";
 
 type CoordinateField = "lat" | "lon";
 type LatitudeDirection = "N" | "S";
@@ -27,12 +31,20 @@ const decimalToDms = (value: number, field: CoordinateField) => {
     const safeValue = Number.isFinite(value) ? value : 0;
     const absolute = Math.abs(safeValue);
 
-    const degrees = Math.floor(absolute);
+    let degrees = Math.floor(absolute);
     const minutesFloat = (absolute - degrees) * 60;
-    const minutes = Math.floor(minutesFloat);
-    const seconds = Number(
-        ((minutesFloat - minutes) * 60).toFixed(2),
-    );
+    let minutes = Math.floor(minutesFloat);
+    let seconds = Number(((minutesFloat - minutes) * 60).toFixed(2));
+
+    // Normalize carry caused by rounding (e.g., 59.999 -> 60.00 sec).
+    if (seconds >= 60) {
+        seconds = 0;
+        minutes += 1;
+    }
+    if (minutes >= 60) {
+        minutes = 0;
+        degrees += 1;
+    }
 
     if (field === "lat") {
         const direction: LatitudeDirection =
@@ -57,25 +69,28 @@ const dmsToDecimal = (
         !Number.isFinite(seconds) ||
         degrees < 0 ||
         minutes < 0 ||
-        seconds < 0 ||
-        minutes >= 60 ||
-        seconds >= 60
+        seconds < 0
     ) {
         return null;
     }
 
     if (field === "lat") {
         if (!["N", "S"].includes(direction)) return null;
-        if (degrees > 90) return null;
     }
 
     if (field === "lon") {
         if (!["E", "W"].includes(direction)) return null;
-        if (degrees > 180) return null;
     }
 
+    // Allow rollover input such as 47° 52' 60" by converting total arc-seconds.
+    const absoluteDecimal =
+        (degrees * 3600 + minutes * 60 + seconds) / 3600;
+
+    if (field === "lat" && absoluteDecimal > 90) return null;
+    if (field === "lon" && absoluteDecimal > 180) return null;
+
     const sign = direction === "S" || direction === "W" ? -1 : 1;
-    return sign * (degrees + minutes / 60 + seconds / 3600);
+    return sign * absoluteDecimal;
 };
 
 const parseLooseNumber = (value: string) => {
@@ -117,9 +132,18 @@ const getBadgeStyles = (level: ThreatLevel) => {
     }
 };
 
+const DEFAULT_PLATFORM_COORDS = [
+    {name: "Hibernia", lat: 46.7504, lon: -48.7819},
+    {name: "Sea Rose", lat: 46.7895, lon: -48.146},
+    {name: "Terra Nova", lat: 46.4, lon: -48.4},
+    {name: "Hebron", lat: 46.544, lon: -48.518},
+];
+
 export default function IcebergThreatPanel() {
     const [icebergInput, setIcebergInput] = useAtom(icebergInputAtom);
-    const [icebergCalculation] = useAtom(icebergCalculationAtom);
+    const [icebergCalculation, setIcebergCalculation] = useAtom(
+        icebergCalculationAtom,
+    );
     const [loading, setLoading] = useAtom(icebergLoadingAtom);
     const [error, setError] = useAtom(icebergErrorAtom);
 
@@ -138,6 +162,51 @@ export default function IcebergThreatPanel() {
         heading: String(icebergInput.heading),
         keelDepth: String(icebergInput.keelDepth),
     });
+
+    const mapPlatforms = DEFAULT_PLATFORM_COORDS.map((platform) => {
+        const fromResult = (icebergCalculation?.results || []).find(
+            (row) => row.name === platform.name,
+        );
+
+        const surfaceThreatLevel =
+            fromResult?.surfaceThreatLevel ?? "GREEN";
+        const subseaAssetThreatLevel =
+            fromResult?.subseaAssetThreatLevel ?? "GREEN";
+
+        return {
+            name: platform.name,
+            lat:
+                Number.isFinite(fromResult?.lat) &&
+                Number.isFinite(fromResult?.lon)
+                    ? (
+                          fromResult as IcebergPlatformResult & {
+                              lat: number;
+                              lon: number;
+                          }
+                      ).lat
+                    : platform.lat,
+            lon:
+                Number.isFinite(fromResult?.lat) &&
+                Number.isFinite(fromResult?.lon)
+                    ? (
+                          fromResult as IcebergPlatformResult & {
+                              lat: number;
+                              lon: number;
+                          }
+                      ).lon
+                    : platform.lon,
+            surfaceThreatLevel,
+            subseaAssetThreatLevel,
+        };
+    });
+
+    const mapIceberg = {
+        lat: icebergCalculation?.iceberg?.lat ?? icebergInput.lat,
+        lon: icebergCalculation?.iceberg?.lon ?? icebergInput.lon,
+        heading:
+            icebergCalculation?.iceberg?.heading ??
+            icebergInput.heading,
+    };
 
     useEffect(() => {
         events.getLastIcebergThreats();
@@ -170,16 +239,6 @@ export default function IcebergThreatPanel() {
                 ...prev,
                 [field]: raw,
             }));
-
-            if (isTransientNumericInput(raw)) return;
-
-            const parsed = parseLooseNumber(raw);
-            if (parsed === null) return;
-
-            setIcebergInput({
-                ...icebergInput,
-                [field]: parsed,
-            });
         };
 
     const handleDmsNumericChange =
@@ -213,10 +272,6 @@ export default function IcebergThreatPanel() {
         (field: "heading" | "keelDepth") => () => {
             const raw = draftInput[field];
             if (isTransientNumericInput(raw)) {
-                setIcebergInput({
-                    ...icebergInput,
-                    [field]: 0,
-                });
                 setDraftInput((prev) => ({
                     ...prev,
                     [field]: "0",
@@ -274,6 +329,7 @@ export default function IcebergThreatPanel() {
             heading === null ||
             keelDepth === null
         ) {
+            setIcebergCalculation(null);
             setError(
                 "Invalid input format. Example: 47o58’00” North, 48o50’00” West, heading 180o, keel depth 78 meters.",
             );
@@ -296,6 +352,7 @@ export default function IcebergThreatPanel() {
         );
 
         if (parsedLat === null || parsedLon === null) {
+            setIcebergCalculation(null);
             setError(
                 "Invalid coordinates. Example: 47o58’00” North and 48o50’00” West.",
             );
@@ -549,6 +606,13 @@ export default function IcebergThreatPanel() {
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            <div className="mt-3">
+                <IcebergTrajectoryMap
+                    iceberg={mapIceberg}
+                    platforms={mapPlatforms}
+                />
             </div>
         </div>
     );
