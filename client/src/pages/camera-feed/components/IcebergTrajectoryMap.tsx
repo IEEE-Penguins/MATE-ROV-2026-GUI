@@ -68,6 +68,39 @@ const getNumericBounds = (values: number[]) => {
     };
 };
 
+const decimalToDms = (value: number) => {
+    const safeValue = Number.isFinite(value) ? value : 0;
+    const absolute = Math.abs(safeValue);
+    let degrees = Math.floor(absolute);
+    const minutesFloat = (absolute - degrees) * 60;
+    let minutes = Math.floor(minutesFloat);
+    let seconds = Number(((minutesFloat - minutes) * 60).toFixed(0));
+
+    if (seconds >= 60) {
+        seconds = 0;
+        minutes += 1;
+    }
+    if (minutes >= 60) {
+        minutes = 0;
+        degrees += 1;
+    }
+
+    return {degrees, minutes, seconds};
+};
+
+const formatDms = (value: number, axis: "lat" | "lon") => {
+    const {degrees, minutes, seconds} = decimalToDms(value);
+    const direction =
+        axis === "lat"
+            ? value < 0
+                ? "S"
+                : "N"
+            : value < 0
+              ? "W"
+              : "E";
+    return `${degrees} ${minutes} ${seconds} ${direction}`;
+};
+
 const PlatformMarker = ({
     cx,
     cy,
@@ -160,10 +193,10 @@ const MapTooltip = ({
                 {point.name}
             </p>
             <p className="text-gray-300">
-                Lat: {formatMax2(point.lat)}
+                Lat: {formatDms(point.lat, "lat")}
             </p>
             <p className="text-gray-300">
-                Lon: {formatMax2(point.lon)}
+                Lon: {formatDms(point.lon, "lon")}
             </p>
             {!isIceberg && "surfaceThreatLevel" in point ? (
                 <p className="text-gray-300">
@@ -249,7 +282,7 @@ export default function IcebergTrajectoryMap({
                             dataKey="lon"
                             domain={[lonBounds.min, lonBounds.max]}
                             tickFormatter={(value) =>
-                                formatMax2(Number(value))
+                                formatDms(Number(value), "lon")
                             }
                             tick={{fontSize: 10, fill: "#94a3b8"}}
                             tickLine={false}
@@ -257,10 +290,11 @@ export default function IcebergTrajectoryMap({
                                 stroke: "#164e63",
                                 strokeOpacity: 0.45,
                             }}
+                            orientation="top"
                             label={{
-                                value: "Longitude (°)",
-                                position: "insideBottom",
-                                offset: -5,
+                                value: "Longitude (DMS)",
+                                position: "insideTop",
+                                offset: 8,
                                 fill: "#67e8f9",
                                 fontSize: 10,
                             }}
@@ -270,7 +304,7 @@ export default function IcebergTrajectoryMap({
                             dataKey="lat"
                             domain={[latBounds.min, latBounds.max]}
                             tickFormatter={(value) =>
-                                formatMax2(Number(value))
+                                formatDms(Number(value), "lat")
                             }
                             tick={{fontSize: 10, fill: "#94a3b8"}}
                             tickLine={false}
@@ -278,10 +312,11 @@ export default function IcebergTrajectoryMap({
                                 stroke: "#164e63",
                                 strokeOpacity: 0.45,
                             }}
+                            orientation="right"
                             label={{
-                                value: "Latitude (°)",
-                                angle: -90,
-                                position: "insideLeft",
+                                value: "Latitude (DMS)",
+                                angle: 90,
+                                position: "insideRight",
                                 fill: "#67e8f9",
                                 fontSize: 10,
                             }}

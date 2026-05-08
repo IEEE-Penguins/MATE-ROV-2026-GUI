@@ -99,7 +99,13 @@ const buildFrequencyCalculation = (
     };
 };
 
-export default function Task25Panel() {
+type Task25PanelProps = {
+    variant?: "overlay" | "page";
+};
+
+export default function Task25Panel({
+    variant = "overlay",
+}: Task25PanelProps) {
     const [task25State, setTask25State] = useAtom(
         task25HolyroodStateAtom,
     );
@@ -288,8 +294,13 @@ export default function Task25Panel() {
         URL.revokeObjectURL(downloadUrl);
     };
 
+    const containerClassName =
+        variant === "page"
+            ? "relative w-full rounded-2xl border border-cyan-500/30 bg-slate-950/80 p-5 shadow-[0_0_35px_rgba(34,211,238,0.12)] backdrop-blur"
+            : "absolute right-20 bottom-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-[62rem] max-w-[calc(100vw-3rem)] max-h-[82vh] overflow-y-auto";
+
     return (
-        <div className="absolute right-20 bottom-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-[62rem] max-w-[calc(100vw-3rem)] max-h-[82vh] overflow-y-auto">
+        <div className={containerClassName}>
             <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-cyan-600/60">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 border border-cyan-500 rounded">

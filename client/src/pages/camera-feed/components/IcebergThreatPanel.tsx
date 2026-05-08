@@ -139,7 +139,13 @@ const DEFAULT_PLATFORM_COORDS = [
     {name: "Hebron", lat: 46.544, lon: -48.518},
 ];
 
-export default function IcebergThreatPanel() {
+type IcebergThreatPanelProps = {
+    variant?: "overlay" | "page";
+};
+
+export default function IcebergThreatPanel({
+    variant = "overlay",
+}: IcebergThreatPanelProps) {
     const [icebergInput, setIcebergInput] = useAtom(icebergInputAtom);
     const [icebergCalculation, setIcebergCalculation] = useAtom(
         icebergCalculationAtom,
@@ -389,8 +395,13 @@ export default function IcebergThreatPanel() {
         events.calculateIcebergThreats(payload);
     };
 
+    const containerClassName =
+        variant === "page"
+            ? "relative w-full rounded-2xl border border-cyan-500/30 bg-slate-950/80 p-5 shadow-[0_0_35px_rgba(34,211,238,0.12)] backdrop-blur"
+            : "absolute right-20 bottom-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-170 max-w-[calc(100vw-3rem)]";
+
     return (
-        <div className="absolute right-20 bottom-20 z-30 bg-black/80 p-4 rounded-xl border border-cyan-500/30 w-170 max-w-[calc(100vw-3rem)]">
+        <div className={containerClassName}>
             <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-cyan-600/60">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 border border-cyan-500 rounded">
