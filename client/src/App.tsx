@@ -11,6 +11,7 @@ import ControlPanel from "./pages/control-panel/page";
 import Configurations from "./pages/configurations/page";
 import ControllerData from "./pages/configurations/components/communication/controllerData";
 import CameraFeed from "./pages/camera-feed/page";
+import NonCamTasks from "./pages/non-cam-tasks/page";
 import {isControllerConnectedAtom} from "../atoms/atoms";
 
 export default function App() {
@@ -78,6 +79,10 @@ export default function App() {
                         }
                     />
                     <Route path="camera" element={<CameraFeed />} />
+                    <Route
+                        path="non-cam-tasks"
+                        element={<NonCamTasks />}
+                    />
                     <Route
                         path="control-panel"
                         element={<ControlPanel />}

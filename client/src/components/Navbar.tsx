@@ -237,6 +237,13 @@ export default function Navbar() {
                     <i className="fas fa-video"></i>
                 </Link>
                 <Link
+                    to="/non-cam-tasks"
+                    className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-all hover:bg-white/5 ${isActive("non-cam-tasks")}`}
+                    title="Non-Camera Tasks"
+                >
+                    <i className="fas fa-clipboard-list"></i>
+                </Link>
+                <Link
                     to="/control-panel"
                     className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-all hover:bg-white/5 ${isActive("control-panel")}`}
                     title="Control Panel"
