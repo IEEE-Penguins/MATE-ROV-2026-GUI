@@ -1,23 +1,8 @@
 {
   "thrusters": [
     {
-      "location": "frontRight",
-      "enabled": true,
-      "reversed": false
-    },
-    {
-      "location": "backRight",
-      "enabled": true,
-      "reversed": false
-    },
-    {
       "location": "topRight",
-      "enabled": true,
-      "reversed": false
-    },
-    {
-      "location": "frontLeft",
-      "enabled": true,
+      "enabled": false,
       "reversed": false
     },
     {
@@ -26,8 +11,23 @@
       "reversed": false
     },
     {
+      "location": "frontRight",
+      "enabled": false,
+      "reversed": false
+    },
+    {
+      "location": "frontLeft",
+      "enabled": false,
+      "reversed": false
+    },
+    {
       "location": "backLeft",
-      "enabled": true,
+      "enabled": false,
+      "reversed": false
+    },
+    {
+      "location": "backRight",
+      "enabled": false,
       "reversed": false
     }
   ],
