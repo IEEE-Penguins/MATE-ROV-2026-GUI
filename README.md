@@ -272,6 +272,8 @@ The telemetry server exposes REST endpoints to ingest data from the autonomous p
 ![alt text](<Screenshot from 2026-04-20 23-21-43.png>)
 
 ![alt text](<Screenshot from 2026-04-21 20-08-51.png>)
+
+![alt text](<Full-SID (2).jpg>)
 ---
 
 **Built with pride by IEEE Penguins Robotics Team for the MATE ROV Competition 2026.**
